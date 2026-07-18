@@ -4,11 +4,14 @@ from collections.abc import Callable
 
 import streamlit as st
 
+
 from src.optical_simulator import (
     build_educational_observations,
     simulate_fiber_attenuation,
 )
 from src.visualizations import create_signal_comparison_figure
+
+
 
 
 PageRenderer = Callable[[], None]
@@ -74,9 +77,14 @@ def render_home() -> None:
         st.write(step)
 
     st.info(
+
         "This Build Week prototype is under active development. The first "
         "operational optical-fiber attenuation model is now available in the "
         "Digital Twin section."
+
+        "This Build Week prototype is under active development. Additional "
+        "functionality will be added incrementally."
+
     )
 
 
@@ -97,6 +105,7 @@ def render_lecture_notes() -> None:
 
 
 def render_digital_twin() -> None:
+
     """Render the attenuation-only educational Digital Twin page."""
     st.title("Educational Digital Twin")
     st.write(
@@ -276,6 +285,37 @@ def render_digital_twin() -> None:
         )
         for observation in observations["research"]:
             st.write(f"- {observation}")
+
+    """Render the educational Digital Twin placeholder page."""
+    st.title("Educational Digital Twin")
+    st.write(
+        "This page will become an interactive educational laboratory for "
+        "exploring optical fiber and free-space optical communication concepts."
+    )
+
+    st.selectbox(
+        "Communication Medium",
+        options=["Optical Fiber", "Free Space Optical"],
+        disabled=True,
+    )
+    st.slider("Bit Rate", min_value=1, max_value=100, value=10, disabled=True)
+    st.caption("Placeholder only.")
+
+    metric_columns = st.columns(3)
+    metrics = [
+        ("Received Power", "—"),
+        ("Pulse Broadening", "—"),
+        ("Signal Quality", "—"),
+    ]
+
+    for column, (label, value) in zip(metric_columns, metrics, strict=True):
+        with column:
+            st.metric(label=label, value=value)
+
+    with st.container(border=True):
+        st.header("Future Interactive Simulation")
+        st.write("Interactive optical communication visualization will appear here.")
+
 
 
 def render_ai_tutor() -> None:
