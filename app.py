@@ -19,9 +19,12 @@ from src.optical_simulator import (
     build_educational_observations,
     simulate_fiber_attenuation,
 )
-
-
-
+from src.simulation_explainer import (
+    build_simulation_evidence,
+    format_simulation_evidence,
+    generate_simulation_explanation,
+    simulation_evidence_fingerprint,
+)
 from src.visualizations import create_signal_comparison_figure
 
 
@@ -87,10 +90,10 @@ def render_home() -> None:
         st.write(step)
 
     st.info(
-        "This Build Week prototype is under active development. The first "
-        "operational optical-fiber attenuation model is available in the "
-        "Digital Twin section. PDF lecture-note extraction is operational, "
-        "and grounded AI tutoring with page-level evidence is available."
+        "This Build Week prototype is under active development. The deterministic "
+        "optical-fiber attenuation model is operational, PDF lecture-note "
+        "extraction and grounded tutoring are available, and AI explanation of "
+        "simulation results is available when API access is configured."
     )
 
 
@@ -287,9 +290,6 @@ def render_lecture_notes() -> None:
 
 
 def render_digital_twin() -> None:
-
-
-
     """Render the attenuation-only educational Digital Twin page."""
     st.title("Educational Digital Twin")
     st.write(
@@ -469,6 +469,79 @@ def render_digital_twin() -> None:
         )
         for observation in observations["research"]:
             st.write(f"- {observation}")
+
+    st.header("AI Explanation of This Simulation")
+    st.info(
+        "Simulation values are calculated deterministically in Python. "
+        "OpenAI explains the supplied results but does not calculate or modify them."
+    )
+    simulation_evidence = build_simulation_evidence(result)
+    current_simulation_fingerprint = simulation_evidence_fingerprint(simulation_evidence)
+    evidence_text = format_simulation_evidence(simulation_evidence)
+    api_key = _get_openai_api_key()
+    model = _get_openai_model()
+
+    if st.button("Clear AI simulation explanation"):
+        st.session_state.pop("simulation_ai_explanation", None)
+        st.success("AI simulation explanation cleared.")
+
+    if api_key is None:
+        st.warning("OpenAI API access is not configured for AI simulation explanations.")
+        st.write(
+            "Add OPENAI_API_KEY to Streamlit Community Cloud app secrets. "
+            "The deterministic Digital Twin remains fully operational without it."
+        )
+    else:
+        with st.form("simulation_ai_explanation_form"):
+            explanation_level = st.selectbox(
+                "Explanation Level",
+                options=["Foundation", "Engineering", "Research Perspective"],
+                index=1,
+                key="simulation_explanation_level",
+            )
+            submitted = st.form_submit_button("Explain Current Simulation")
+
+        if submitted:
+            try:
+                with st.spinner("Generating an AI explanation for the current deterministic result..."):
+                    explanation = generate_simulation_explanation(
+                        result=result,
+                        level=explanation_level,
+                        api_key=api_key,
+                        model=model,
+                    )
+                st.session_state["simulation_ai_explanation"] = {
+                    "explanation_text": explanation.explanation_text,
+                    "model": explanation.model,
+                    "level": explanation.level,
+                    "simulation_fingerprint": current_simulation_fingerprint,
+                }
+            except ValueError as error:
+                st.error(str(error))
+            except AuthenticationError:
+                st.error("The OpenAI API key was rejected. Check the app’s secret configuration.")
+            except RateLimitError:
+                st.error("The OpenAI API rate limit or usage limit was reached. Please try again later or review API billing.")
+            except APIConnectionError:
+                st.error("OptiLearn AI could not connect to the OpenAI API. Please try again.")
+            except APIError:
+                st.error("The OpenAI API could not complete the simulation explanation request.")
+            except RuntimeError as error:
+                st.error(str(error))
+
+    stored_explanation = st.session_state.get("simulation_ai_explanation")
+    if isinstance(stored_explanation, dict):
+        if stored_explanation.get("simulation_fingerprint") == current_simulation_fingerprint:
+            st.subheader("AI Simulation Explanation")
+            st.write(stored_explanation.get("explanation_text", ""))
+            st.caption(f"Model used: {stored_explanation.get('model', 'Unknown')}")
+            st.caption(f"Explanation level: {stored_explanation.get('level', 'Unknown')}")
+            with st.expander("Simulation Evidence Sent to OpenAI"):
+                st.text(evidence_text)
+        else:
+            st.caption(
+                "Simulation parameters changed. Generate a new AI explanation for the current result."
+            )
 
 
 
