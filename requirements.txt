@@ -1,16 +1,5 @@
 streamlit
-
 numpy
 plotly
 pymupdf
-
-
-numpy
-plotly
-pymupdf
-
-
-numpy
-plotly
-
-
+openai
