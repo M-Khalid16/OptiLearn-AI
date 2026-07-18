@@ -1,12 +1,19 @@
 """Streamlit application shell for OptiLearn AI."""
 
 from collections.abc import Callable
+
 from pathlib import PurePath
 
 
 import streamlit as st
 
 from src.pdf_parser import PDFDocument, extract_pdf_document
+
+
+import streamlit as st
+
+
+
 from src.optical_simulator import (
     build_educational_observations,
     simulate_fiber_attenuation,
@@ -77,6 +84,7 @@ def render_home() -> None:
         st.write(step)
 
     st.info(
+
         "This Build Week prototype is under active development. The first "
         "operational optical-fiber attenuation model is available in the "
         "Digital Twin section, and PDF lecture-note extraction is now "
@@ -240,6 +248,37 @@ def render_lecture_notes() -> None:
 
 
 def render_digital_twin() -> None:
+
+
+        "This Build Week prototype is under active development. The first "
+        "operational optical-fiber attenuation model is now available in the "
+        "Digital Twin section."
+
+        "This Build Week prototype is under active development. Additional "
+        "functionality will be added incrementally."
+
+    )
+
+
+def render_lecture_notes() -> None:
+    """Render the lecture notes placeholder page."""
+    st.title("Lecture Notes")
+    st.write(
+        "Future versions will allow students to upload optical communication "
+        "lecture notes in PDF format."
+    )
+    st.file_uploader(
+        "Upload PDF lecture notes",
+        type=["pdf"],
+        disabled=True,
+        help="PDF upload is disabled for this milestone.",
+    )
+    st.info("PDF parsing will be implemented in the next milestone.")
+
+
+def render_digital_twin() -> None:
+
+
     """Render the attenuation-only educational Digital Twin page."""
     st.title("Educational Digital Twin")
     st.write(
@@ -421,6 +460,39 @@ def render_digital_twin() -> None:
             st.write(f"- {observation}")
 
 
+    """Render the educational Digital Twin placeholder page."""
+    st.title("Educational Digital Twin")
+    st.write(
+        "This page will become an interactive educational laboratory for "
+        "exploring optical fiber and free-space optical communication concepts."
+    )
+
+    st.selectbox(
+        "Communication Medium",
+        options=["Optical Fiber", "Free Space Optical"],
+        disabled=True,
+    )
+    st.slider("Bit Rate", min_value=1, max_value=100, value=10, disabled=True)
+    st.caption("Placeholder only.")
+
+    metric_columns = st.columns(3)
+    metrics = [
+        ("Received Power", "—"),
+        ("Pulse Broadening", "—"),
+        ("Signal Quality", "—"),
+    ]
+
+    for column, (label, value) in zip(metric_columns, metrics, strict=True):
+        with column:
+            st.metric(label=label, value=value)
+
+    with st.container(border=True):
+        st.header("Future Interactive Simulation")
+        st.write("Interactive optical communication visualization will appear here.")
+
+
+
+
 def render_ai_tutor() -> None:
     """Render the AI tutor placeholder page."""
     st.title("AI Tutor")
@@ -434,10 +506,14 @@ def render_ai_tutor() -> None:
         placeholder="AI tutor questions will be enabled in a future milestone.",
     )
     st.button("Ask OptiLearn AI", disabled=True)
+
     st.info(
         "Upload and extract lecture notes first. Grounded OpenAI tutoring "
         "will be implemented in the next milestone."
     )
+
+    st.info("OpenAI integration will be implemented in a future milestone.")
+
 
 
 def render_sidebar() -> str:

@@ -199,3 +199,9 @@ def extract_pdf_document(
         ) from error
     finally:
         document.close()
+
+"""PDF parsing module for future lecture note ingestion."""
+
+# TODO: Define interfaces for future lecture note extraction workflows.
+# TODO: Add PDF parsing implementation in a later milestone.
+
