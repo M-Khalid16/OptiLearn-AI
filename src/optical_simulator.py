@@ -1,4 +1,3 @@
-
 """Deterministic optical-fiber attenuation model for OptiLearn AI."""
 
 from dataclasses import dataclass
@@ -225,6 +224,7 @@ def build_educational_observations(
             ),
         ],
     }
+
 
 """Optical simulator module for future communication concept modeling."""
 
