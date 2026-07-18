@@ -1,15 +1,23 @@
 """Streamlit application shell for OptiLearn AI."""
 
 from collections.abc import Callable
+
 from pathlib import PurePath
 
 import streamlit as st
+
+
+from src.pdf_parser import PDFDocument, extract_pdf_document
+
+
 
 from src.optical_simulator import (
     build_educational_observations,
     simulate_fiber_attenuation,
 )
-from src.pdf_parser import PDFDocument, extract_pdf_document
+
+
+
 from src.visualizations import create_signal_comparison_figure
 
 
@@ -76,6 +84,9 @@ def render_home() -> None:
         st.write(step)
 
     st.info(
+
+
+
         "This Build Week prototype is under active development. The first "
         "operational optical-fiber attenuation model is available in the "
         "Digital Twin section, and PDF lecture-note extraction is now "
@@ -239,6 +250,9 @@ def render_lecture_notes() -> None:
 
 
 def render_digital_twin() -> None:
+
+
+
     """Render the attenuation-only educational Digital Twin page."""
     st.title("Educational Digital Twin")
     st.write(
@@ -420,6 +434,8 @@ def render_digital_twin() -> None:
             st.write(f"- {observation}")
 
 
+
+
 def render_ai_tutor() -> None:
     """Render the AI tutor placeholder page."""
     st.title("AI Tutor")
@@ -433,12 +449,17 @@ def render_ai_tutor() -> None:
         placeholder="AI tutor questions will be enabled in a future milestone.",
     )
     st.button("Ask OptiLearn AI", disabled=True)
+
+
+
+
     st.info(
         "Upload and extract lecture notes first. Grounded OpenAI tutoring "
         "will be implemented in the next milestone."
     )
 
 
+    
 def render_sidebar() -> str:
     """Render sidebar navigation and return the selected page name."""
     with st.sidebar:
