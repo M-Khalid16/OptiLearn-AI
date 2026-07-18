@@ -10,10 +10,6 @@ import streamlit as st
 from src.pdf_parser import PDFDocument, extract_pdf_document
 
 
-import streamlit as st
-
-
-
 from src.optical_simulator import (
     build_educational_observations,
     simulate_fiber_attenuation,
