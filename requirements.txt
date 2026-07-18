@@ -2,4 +2,10 @@ streamlit
 
 numpy
 plotly
+pymupdf
+
+
+numpy
+plotly
+
 

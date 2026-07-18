@@ -1,4 +1,3 @@
-
 """Plotly visualizations for OptiLearn AI scientific results."""
 
 import plotly.graph_objects as go
@@ -61,4 +60,5 @@ def create_signal_comparison_figure(
 
 # TODO: Define interfaces for future educational visualizations.
 # TODO: Add visualization implementation in a later milestone.
+
 

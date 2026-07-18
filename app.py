@@ -2,7 +2,16 @@
 
 from collections.abc import Callable
 
+from pathlib import PurePath
+
+
 import streamlit as st
+
+from src.pdf_parser import PDFDocument, extract_pdf_document
+
+
+import streamlit as st
+
 
 
 from src.optical_simulator import (
@@ -10,8 +19,6 @@ from src.optical_simulator import (
     simulate_fiber_attenuation,
 )
 from src.visualizations import create_signal_comparison_figure
-
-
 
 
 PageRenderer = Callable[[], None]
@@ -79,6 +86,171 @@ def render_home() -> None:
     st.info(
 
         "This Build Week prototype is under active development. The first "
+        "operational optical-fiber attenuation model is available in the "
+        "Digital Twin section, and PDF lecture-note extraction is now "
+        "available in the Lecture Notes section."
+    )
+
+
+@st.cache_data(show_spinner=False)
+def parse_uploaded_pdf(pdf_bytes: bytes, filename: str) -> PDFDocument:
+    """Extract uploaded PDF text using the parser module."""
+    return extract_pdf_document(pdf_bytes=pdf_bytes, filename=filename)
+
+
+def _display_empty_lecture_notes_state() -> None:
+    """Render guidance for the Lecture Notes page before upload."""
+    with st.container(border=True):
+        st.subheader("Upload a text-based PDF to begin")
+        st.write("- Supported format: text-based PDF")
+        st.write("- Maximum size: 25 MiB")
+        st.write("- Maximum pages: 300")
+        st.write("- Scanned PDFs are not yet supported because OCR is not included.")
+        st.write("- Try uploading optical communication lecture notes.")
+
+
+def _format_metadata_value(value: str | None) -> str:
+    """Return display text for optional PDF metadata."""
+    return value if value else "Not provided"
+
+
+def _download_filename(filename: str) -> str:
+    """Build the extracted-text download filename from the PDF name."""
+    stem = PurePath(filename).stem or "lecture_notes"
+    return f"{stem}_extracted.txt"
+
+
+def render_lecture_notes() -> None:
+    """Render the lecture-note PDF extraction workflow."""
+    st.title("Lecture Notes")
+    st.write(
+        "Upload text-based optical communication lecture notes in PDF format. "
+        "OptiLearn AI will extract the page text and prepare it for future "
+        "grounded learning features."
+    )
+    st.info(
+        "Files are processed in memory for this session and are not written "
+        "to the project repository."
+    )
+    st.caption(
+        "Scanned or image-only PDFs require OCR, which is not included in "
+        "this milestone."
+    )
+
+    uploaded_file = st.file_uploader(
+        "Upload PDF lecture notes",
+        type=["pdf"],
+        accept_multiple_files=False,
+        help="Upload one text-based PDF. Application limit: 25 MiB and 300 pages.",
+    )
+
+    if uploaded_file is None:
+        _display_empty_lecture_notes_state()
+        return
+
+    pdf_bytes = uploaded_file.getvalue()
+    try:
+        with st.spinner("Extracting lecture notes..."):
+            document = parse_uploaded_pdf(pdf_bytes, uploaded_file.name)
+    except ValueError as error:
+        st.error(str(error))
+        return
+
+    st.success("Lecture notes extracted successfully.")
+    st.write(f"Filename: {document.filename}")
+
+    st.header("Document Overview")
+    text_coverage_percent = 100 * document.nonempty_page_count / document.page_count
+    overview_columns = st.columns(6)
+    overview_metrics = [
+        ("Pages", f"{document.page_count:,}"),
+        ("Words", f"{document.word_count:,}"),
+        ("Characters", f"{document.character_count:,}"),
+        ("Nonempty Pages", f"{document.nonempty_page_count:,}"),
+        ("Sparse Pages", f"{document.sparse_page_count:,}"),
+        ("Text Coverage", f"{text_coverage_percent:.1f} %"),
+    ]
+    for column, (label, value) in zip(overview_columns, overview_metrics, strict=True):
+        with column:
+            st.metric(label=label, value=value)
+
+    with st.expander("PDF Metadata"):
+        st.write(f"Title: {_format_metadata_value(document.title)}")
+        st.write(f"Author: {_format_metadata_value(document.author)}")
+        st.write(f"Subject: {_format_metadata_value(document.subject)}")
+        st.write(f"Keywords: {_format_metadata_value(document.keywords)}")
+        st.write(f"Filename: {document.filename}")
+
+    if document.is_likely_scanned:
+        st.warning(
+            "Little or no machine-readable text was found. The document may "
+            "consist primarily of scanned images. OCR is not part of the current "
+            "prototype, so the extracted text should not be used for future AI "
+            "grounding unless you provide a text-based PDF."
+        )
+
+    st.header("Page Explorer")
+    selected_page_number = st.number_input(
+        "Select page",
+        min_value=1,
+        max_value=document.page_count,
+        value=1,
+        step=1,
+    )
+    selected_page = document.pages[int(selected_page_number) - 1]
+    st.write(f"Page number: {selected_page.page_number}")
+    st.write(f"Word count: {selected_page.word_count:,}")
+    st.write(f"Character count: {selected_page.character_count:,}")
+    if selected_page.is_text_sparse:
+        st.warning("Text sparse")
+
+    page_text = selected_page.text
+    if not page_text:
+        st.info("No machine-readable text was extracted from this page.")
+    st.text_area(
+        "Extracted page text",
+        value=page_text,
+        height=400,
+        disabled=True,
+    )
+
+    with st.expander("Full Extracted Text"):
+        st.text_area(
+            "Full extracted text",
+            value=document.full_text,
+            height=450,
+            disabled=True,
+        )
+
+    st.download_button(
+        label="Download extracted text",
+        data=document.full_text.encode("utf-8"),
+        file_name=_download_filename(document.filename),
+        mime="text/plain",
+    )
+
+    st.header("Study Readiness")
+    if document.is_likely_scanned:
+        st.warning(
+            "The document has limited machine-readable text and is not yet "
+            "reliable for grounded AI tutoring. A text-based PDF export is "
+            "preferred."
+        )
+    else:
+        st.success(
+            "The document contains machine-readable text and is ready for the "
+            "future grounded AI Tutor."
+        )
+        st.write("- Page provenance has been preserved for future grounded answers.")
+        st.write(
+            "- Equations and complex layouts may still require manual verification."
+        )
+
+
+def render_digital_twin() -> None:
+
+
+        "This Build Week prototype is under active development. The first "
         "operational optical-fiber attenuation model is now available in the "
         "Digital Twin section."
 
@@ -105,6 +277,7 @@ def render_lecture_notes() -> None:
 
 
 def render_digital_twin() -> None:
+
 
     """Render the attenuation-only educational Digital Twin page."""
     st.title("Educational Digital Twin")
@@ -286,6 +459,7 @@ def render_digital_twin() -> None:
         for observation in observations["research"]:
             st.write(f"- {observation}")
 
+
     """Render the educational Digital Twin placeholder page."""
     st.title("Educational Digital Twin")
     st.write(
@@ -318,6 +492,7 @@ def render_digital_twin() -> None:
 
 
 
+
 def render_ai_tutor() -> None:
     """Render the AI tutor placeholder page."""
     st.title("AI Tutor")
@@ -331,7 +506,14 @@ def render_ai_tutor() -> None:
         placeholder="AI tutor questions will be enabled in a future milestone.",
     )
     st.button("Ask OptiLearn AI", disabled=True)
+
+    st.info(
+        "Upload and extract lecture notes first. Grounded OpenAI tutoring "
+        "will be implemented in the next milestone."
+    )
+
     st.info("OpenAI integration will be implemented in a future milestone.")
+
 
 
 def render_sidebar() -> str:
