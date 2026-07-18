@@ -1,15 +1,19 @@
 """Streamlit application shell for OptiLearn AI."""
 
 from collections.abc import Callable
-
+import hashlib
+import os
 from pathlib import PurePath
 
+from openai import APIConnectionError, APIError, AuthenticationError, RateLimitError
 import streamlit as st
 
-
+from src.ai_tutor import (
+    generate_grounded_answer,
+    normalize_question,
+    validate_answer_citations,
+)
 from src.pdf_parser import PDFDocument, extract_pdf_document
-
-
 
 from src.optical_simulator import (
     build_educational_observations,
@@ -53,9 +57,8 @@ def render_home() -> None:
         ),
         (
             "🤖",
-            "AI Tutor",
-            "Receive educational explanations that connect theory with "
-            "interactive simulations.",
+            "Grounded AI Tutor",
+            "Ask questions answered from retrieved lecture-note passages with page-level evidence.",
         ),
     ]
 
@@ -84,13 +87,10 @@ def render_home() -> None:
         st.write(step)
 
     st.info(
-
-
-
         "This Build Week prototype is under active development. The first "
         "operational optical-fiber attenuation model is available in the "
-        "Digital Twin section, and PDF lecture-note extraction is now "
-        "available in the Lecture Notes section."
+        "Digital Twin section. PDF lecture-note extraction is operational, "
+        "and grounded AI tutoring with page-level evidence is available."
     )
 
 
@@ -122,13 +122,28 @@ def _download_filename(filename: str) -> str:
     return f"{stem}_extracted.txt"
 
 
+def _fingerprint_pdf_bytes(pdf_bytes: bytes) -> str:
+    """Return a deterministic fingerprint for uploaded PDF bytes."""
+    return hashlib.sha256(pdf_bytes).hexdigest()
+
+
+def _clear_active_lecture_notes() -> None:
+    """Clear active lecture-note state and reset the upload widget generation."""
+    st.session_state.pop("active_pdf_document", None)
+    st.session_state.pop("active_pdf_filename", None)
+    st.session_state.pop("active_pdf_fingerprint", None)
+    st.session_state["tutor_messages"] = []
+    current_generation = st.session_state.get("lecture_uploader_generation", 0)
+    st.session_state["lecture_uploader_generation"] = current_generation + 1
+
+
 def render_lecture_notes() -> None:
     """Render the lecture-note PDF extraction workflow."""
     st.title("Lecture Notes")
     st.write(
         "Upload text-based optical communication lecture notes in PDF format. "
-        "OptiLearn AI will extract the page text and prepare it for future "
-        "grounded learning features."
+        "OptiLearn AI will extract page text and make it available to the "
+        "grounded AI Tutor during the current session."
     )
     st.info(
         "Files are processed in memory for this session and are not written "
@@ -139,11 +154,24 @@ def render_lecture_notes() -> None:
         "this milestone."
     )
 
+    if st.session_state.pop("active_notes_cleared", False):
+        st.success("Active lecture notes and tutor history were cleared for this session.")
+
+    if "lecture_uploader_generation" not in st.session_state:
+        st.session_state["lecture_uploader_generation"] = 0
+
+    if st.button("Clear active lecture notes"):
+        _clear_active_lecture_notes()
+        st.session_state["active_notes_cleared"] = True
+        st.rerun()
+
+    uploader_generation = st.session_state["lecture_uploader_generation"]
     uploaded_file = st.file_uploader(
         "Upload PDF lecture notes",
         type=["pdf"],
         accept_multiple_files=False,
         help="Upload one text-based PDF. Application limit: 25 MiB and 300 pages.",
+        key=f"lecture_pdf_uploader_{uploader_generation}",
     )
 
     if uploaded_file is None:
@@ -158,7 +186,16 @@ def render_lecture_notes() -> None:
         st.error(str(error))
         return
 
+    pdf_fingerprint = _fingerprint_pdf_bytes(pdf_bytes)
+    previous_fingerprint = st.session_state.get("active_pdf_fingerprint")
+    if previous_fingerprint != pdf_fingerprint:
+        st.session_state["tutor_messages"] = []
+    st.session_state["active_pdf_document"] = document
+    st.session_state["active_pdf_filename"] = uploaded_file.name
+    st.session_state["active_pdf_fingerprint"] = pdf_fingerprint
+
     st.success("Lecture notes extracted successfully.")
+    st.info("This document is now available to the grounded AI Tutor for the current session.")
     st.write(f"Filename: {document.filename}")
 
     st.header("Document Overview")
@@ -241,7 +278,7 @@ def render_lecture_notes() -> None:
     else:
         st.success(
             "The document contains machine-readable text and is ready for the "
-            "future grounded AI Tutor."
+            "grounded AI Tutor."
         )
         st.write("- Page provenance has been preserved for future grounded answers.")
         st.write(
@@ -436,30 +473,181 @@ def render_digital_twin() -> None:
 
 
 
+def _get_openai_api_key() -> str | None:
+    """Return the configured OpenAI API key without storing or displaying it."""
+    try:
+        secret_key = st.secrets["OPENAI_API_KEY"]
+    except (KeyError, FileNotFoundError):
+        secret_key = None
+    if isinstance(secret_key, str) and secret_key.strip():
+        return secret_key.strip()
+    env_key = os.environ.get("OPENAI_API_KEY")
+    return env_key.strip() if env_key and env_key.strip() else None
+
+
+def _get_openai_model() -> str:
+    """Return the configured OpenAI model name."""
+    try:
+        secret_model = st.secrets["OPENAI_MODEL"]
+    except (KeyError, FileNotFoundError):
+        secret_model = None
+    if isinstance(secret_model, str) and secret_model.strip():
+        return secret_model.strip()
+    env_model = os.environ.get("OPENAI_MODEL")
+    return env_model.strip() if env_model and env_model.strip() else "gpt-5-mini"
+
+
+def _readiness_status(document: PDFDocument) -> str:
+    """Summarize whether extracted text is suitable for grounded tutoring."""
+    return "Limited machine-readable text" if document.is_likely_scanned else "Ready for grounded tutoring"
+
+def _display_tutor_answer(answer) -> None:
+    """Render a tutor answer and its retrieved evidence."""
+    st.header("Grounded Explanation")
+    st.write(answer.answer_text)
+    st.caption(f"Model used: {answer.model}")
+    with st.expander("Retrieved Evidence"):
+        if not answer.retrieved_passages:
+            st.info("No relevant lecture-note passages were retrieved.")
+        for passage in answer.retrieved_passages:
+            st.subheader(f"Page {passage.page_number} — {passage.chunk_id}")
+            st.caption(f"Relevance score: {passage.score:.3f}")
+            st.text_area(
+                f"Passage text ({passage.chunk_id})",
+                value=passage.text,
+                height=180,
+                disabled=True,
+            )
+
+
 def render_ai_tutor() -> None:
-    """Render the AI tutor placeholder page."""
-    st.title("AI Tutor")
+    """Render the grounded AI Tutor page."""
+    st.title("Grounded AI Tutor")
     st.write(
-        "Future versions will provide educational explanations that connect "
-        "optical communication theory with interactive Digital Twin scenarios."
+        "Ask questions about the active lecture notes. OptiLearn AI retrieves "
+        "relevant page passages before requesting an explanation from OpenAI."
     )
-    st.text_area(
-        "Ask a question about optical communication",
-        disabled=True,
-        placeholder="AI tutor questions will be enabled in a future milestone.",
-    )
-    st.button("Ask OptiLearn AI", disabled=True)
-
-
-
-
     st.info(
-        "Upload and extract lecture notes first. Grounded OpenAI tutoring "
-        "will be implemented in the next milestone."
+        "Answers are grounded in retrieved text from the uploaded PDF. PDF "
+        "extraction may not perfectly preserve equations, tables, or multi-column layouts."
     )
 
+    document = st.session_state.get("active_pdf_document")
+    filename = st.session_state.get("active_pdf_filename")
+    if not isinstance(document, PDFDocument):
+        st.warning("No active lecture notes are available.")
+        st.write("Open Lecture Notes, upload a text-based PDF, and return to the AI Tutor.")
+        return
 
-    
+    if document.is_likely_scanned:
+        st.warning(
+            "The active PDF has limited machine-readable text. Grounded tutoring may be unreliable. "
+            "A text-based PDF export is recommended."
+        )
+
+    st.header("Active Document")
+    text_coverage_percent = 100 * document.nonempty_page_count / document.page_count
+    summary_columns = st.columns(5)
+    summary_metrics = [
+        ("Filename", filename or document.filename),
+        ("Pages", f"{document.page_count:,}"),
+        ("Words", f"{document.word_count:,}"),
+        ("Text Coverage", f"{text_coverage_percent:.1f} %"),
+        ("Readiness", _readiness_status(document)),
+    ]
+    for column, (label, value) in zip(summary_columns, summary_metrics, strict=True):
+        with column:
+            st.metric(label=label, value=value)
+
+    api_key = _get_openai_api_key()
+    model = _get_openai_model()
+    if api_key is None:
+        st.error("OpenAI API access is not configured for this deployment.")
+        st.write("Add OPENAI_API_KEY to Streamlit Community Cloud app secrets. Do not place the key in GitHub.")
+        return
+
+    if "tutor_messages" not in st.session_state:
+        st.session_state["tutor_messages"] = []
+
+    with st.form("grounded_ai_tutor_form"):
+        level = st.selectbox(
+            "Explanation Level",
+            options=["Foundation", "Engineering", "Research Perspective"],
+            index=1,
+        )
+        question = st.text_area(
+            "Question",
+            placeholder="Example: Why does chromatic dispersion broaden an optical pulse?",
+        )
+        submitted = st.form_submit_button(
+            "Ask OptiLearn AI",
+            disabled=not question.strip(),
+        )
+
+    current_answer = None
+    if submitted:
+        try:
+            normalized_question = normalize_question(question)
+            with st.spinner("Retrieving lecture passages and preparing a grounded explanation..."):
+                current_answer = generate_grounded_answer(
+                    question=normalized_question,
+                    document=document,
+                    level=level,
+                    api_key=api_key,
+                    model=model,
+                )
+        except ValueError as error:
+            st.error(str(error))
+        except AuthenticationError:
+            st.error("The OpenAI API key was rejected. Check the app’s secret configuration.")
+        except RateLimitError:
+            st.error("The OpenAI API rate limit or usage limit was reached. Please try again later or review API billing.")
+        except APIConnectionError:
+            st.error("OptiLearn AI could not connect to the OpenAI API. Please try again.")
+        except APIError:
+            st.error("The OpenAI API could not complete the request.")
+        except RuntimeError as error:
+            st.error(str(error))
+
+    current_answer_added_to_history = False
+    if current_answer is not None:
+        _display_tutor_answer(current_answer)
+        validated_citations = validate_answer_citations(
+            current_answer.answer_text,
+            current_answer.retrieved_passages,
+        )
+        messages = list(st.session_state.get("tutor_messages", []))
+        messages.append(
+            {
+                "question": normalized_question,
+                "level": level,
+                "answer_text": current_answer.answer_text,
+                "cited_page_numbers": validated_citations,
+                "model": current_answer.model,
+            }
+        )
+        st.session_state["tutor_messages"] = messages[-6:]
+        current_answer_added_to_history = True
+
+    st.header("Conversation History")
+    if st.button("Clear tutor history"):
+        st.session_state["tutor_messages"] = []
+        st.success("Tutor history cleared.")
+    history = st.session_state.get("tutor_messages", [])
+    if current_answer_added_to_history:
+        history = history[:-1]
+    if not history:
+        st.info("No completed tutor exchanges yet.")
+    else:
+        for index, item in enumerate(history, start=1):
+            with st.expander(f"Question {index} — {item['level']}", expanded=False):
+                st.write(f"Question: {item['question']}")
+                st.write(item["answer_text"])
+                cited_pages = item.get("cited_page_numbers", ())
+                st.caption(f"Cited pages: {', '.join(str(page) for page in cited_pages) if cited_pages else 'None'}")
+                st.caption(f"Model used: {item['model']}")
+
+
 def render_sidebar() -> str:
     """Render sidebar navigation and return the selected page name."""
     with st.sidebar:
