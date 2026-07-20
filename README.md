@@ -109,6 +109,11 @@ OptiLearn AI uses educational deterministic approximations intended for learning
 
 These models are designed for conceptual education, not certified system design.
 
+## How ChatGPT 5.6 and Codex Supported Development
+
+ChatGPT and Codex supported the development process as engineering assistants rather than replacing the scientific models or project decisions. ChatGPT was used to refine the educational concept, improve explanations for BS, MS, and PhD engineering students, organize the learning workflow, review documentation, and help communicate technical ideas in clear language.
+
+Codex was used to assist with implementation and repository maintenance. It helped generate and revise Streamlit interface code, identify duplicated sections and widget-key conflicts, improve navigation, create testing and deployment documentation, and perform syntax and structural validation. All optical-communication calculations remain deterministic Python implementations. AI tools were not used to invent or modify numerical simulation results. Scientific equations, assumptions, outputs, and limitations were reviewed separately from AI-generated explanations. The final application was tested through compilation checks, Streamlit page-render tests, manual inspection, and comparison of known scientific outputs.
 
 ## Core Features
 
