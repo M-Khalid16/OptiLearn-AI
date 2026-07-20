@@ -53,6 +53,19 @@ from src.lp_mode_solver import (
     solve_lp_modes,
 )
 from src.ray_tracer import RayLaunch, trace_meridional_ray, trace_skew_ray
+
+from src.ui_components import (
+    inject_global_styles,
+    render_feature_card,
+    render_footer,
+    render_learning_step,
+    render_next_step,
+    render_page_header,
+    render_scientific_trust_panel,
+    render_scope_notice,
+    render_status_badge,
+)
+
 from src.visualizations import (
     create_dispersion_comparison_figure,
     create_fso_beam_profile_figure,
@@ -70,69 +83,88 @@ from src.visualizations import (
 PageRenderer = Callable[[], None]
 
 
+def _is_demo_mode_enabled() -> bool:
+    """Return whether transparent local demo mode is enabled."""
+    try:
+        value = st.secrets["OPTILEARN_DEMO_MODE"]
+    except (KeyError, FileNotFoundError):
+        value = os.environ.get("OPTILEARN_DEMO_MODE", "")
+    return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _request_page(page: str) -> None:
+    """Safely request sidebar navigation on the next rerun."""
+    st.session_state["requested_page"] = page
+    st.rerun()
+
+
 def render_home() -> None:
-    """Render the project overview page."""
-    st.title("OptiLearn AI")
-    st.subheader("AI-Powered Educational Digital Twin\nfor Optical Communication")
-
-    st.write(
-        "OptiLearn AI helps engineering students upload optical communication "
-        "lecture notes, receive AI-assisted explanations for difficult "
-        "concepts, interact with an educational Digital Twin, visualize optical "
-        "communication behaviour, practise with deterministic formative quizzes, "
-        "and build engineering intuition beyond memorizing equations."
+    """Render the polished project landing page."""
+    st.markdown('<div class="optilearn-hero">', unsafe_allow_html=True)
+    render_page_header(
+        "OptiLearn AI",
+        "AI-Powered Educational Digital Twin for Optical Communication",
+        eyebrow="OpenAI Build Week Prototype",
+        badge="OpenAI Build Week Prototype",
     )
+    st.header("Learn optical communication by exploring the physics—not just memorizing the equations.")
+    st.write("OptiLearn AI combines grounded tutoring, deterministic digital twins, formative quizzes, and interactive optical-fiber mode visualization in one educational workspace.")
+    st.info("Scientific values are calculated in deterministic Python models. AI is used only for grounded explanations and tutoring.")
+    c1, c2, c3 = st.columns(3)
+    if c1.button("Explore the Digital Twin", use_container_width=True):
+        _request_page("Digital Twin")
+    if c2.button("Open Mode Explorer", use_container_width=True):
+        _request_page("Mode Explorer")
+    if c3.button("Upload Lecture Notes", use_container_width=True):
+        _request_page("Lecture Notes")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    columns = st.columns(3)
-    features = [
-        (
-            "📄",
-            "Learn from Notes",
-            "Upload optical communication lecture notes and prepare them for "
-            "AI-assisted learning.",
-        ),
-        (
-            "🔬",
-            "Interactive Digital Twin",
-            "Explore optical fiber and free-space optical communication through "
-            "interactive simulations.",
-        ),
-        (
-            "🤖",
-            "Grounded AI Tutor",
-            "Ask questions answered from retrieved lecture-note passages with page-level evidence.",
-        ),
+    st.header("Core Capabilities")
+    cards = [
+        ("📄", "Lecture Notes", "Upload text-based PDFs and preserve page-level evidence."),
+        ("🔬", "Digital Twin", "Explore deterministic fiber attenuation, dispersion, and FSO link budgets."),
+        ("💬", "Grounded AI Tutor", "Ask questions answered from retrieved lecture-note passages."),
+        ("✓", "Quiz Lab", "Practise with deterministic, locally graded optical-communication questions."),
+        ("◎", "Mode Explorer", "Examine scalar LP modes, launch coupling, meridional rays, and skew rays."),
+        ("ℹ", "Scientific Transparency", "See equations, assumptions, limitations, and deterministic evidence."),
     ]
+    for row in (cards[:3], cards[3:]):
+        cols = st.columns(3)
+        for col, card in zip(cols, row, strict=True):
+            with col:
+                render_feature_card(*card)
 
-    for column, (icon, title, description) in zip(columns, features, strict=True):
-        with column:
-            st.header(icon)
-            st.subheader(title)
-            st.write(description)
-
-    st.divider()
-    st.header("Learning Workflow")
-
-    workflow_steps = [
-        "Upload Lecture Notes",
-        "↓",
-        "Understand Theory",
-        "↓",
-        "Explore the Digital Twin",
-        "↓",
-        "Observe Signal Behaviour",
-        "↓",
-        "Develop Engineering Intuition",
+    st.header("A Guided Learning Journey")
+    steps = [
+        (1, "Upload", "Add text-based optical-communication lecture notes."),
+        (2, "Understand", "Ask grounded questions with page-level evidence."),
+        (3, "Explore", "Change physical parameters in deterministic simulations."),
+        (4, "Practise", "Test understanding with formative quizzes."),
+        (5, "Investigate", "Explore LP modes, Gaussian coupling, and ray propagation."),
     ]
+    cols = st.columns(2)
+    for i, step in enumerate(steps):
+        with cols[i % 2]:
+            render_learning_step(*step)
 
-    for step in workflow_steps:
-        st.write(step)
+    st.header("What You Can Explore")
+    models = [
+        ("Fiber attenuation", "Calculates dB loss and received power; useful for link-loss intuition; limited to ideal attenuation without noise."),
+        ("Chromatic dispersion", "Calculates temporal broadening; useful for symbol-spreading intuition; not a full optical-field or receiver model."),
+        ("Free-space optical links", "Calculates beam spreading, aperture capture, pointing loss, and atmospheric loss; omits turbulence and scintillation."),
+        ("Scalar LP modes", "Solves guided weak-guidance mode families; connects V-number to fields; not full-vector FEM/BPM/FDTD."),
+        ("Meridional and skew rays", "Traces geometric ray paths; useful for acceptance intuition; rays are not wave modes."),
+        ("Gaussian launch coupling", "Computes overlap with displayed scalar modes; useful for alignment intuition; not an experimental power measurement."),
+    ]
+    for title, body in models:
+        render_feature_card("•", title, body)
 
-    st.info(
-        "OptiLearn AI now includes deterministic fiber and FSO simulations, "
-        "Quiz Lab, LP-mode profiles, Gaussian launch coupling, and meridional "
-        "and skew-ray visualization."
-    )
+    render_scientific_trust_panel()
+    st.header("Start Exploring")
+    st.write("Start with a deterministic simulation, then use the explanations and quizzes to test your understanding.")
+    if st.button("Start Exploring", type="primary"):
+        _request_page("Digital Twin")
+    render_footer()
 
 
 @st.cache_data(show_spinner=False)
@@ -180,12 +212,7 @@ def _clear_active_lecture_notes() -> None:
 
 def render_lecture_notes() -> None:
     """Render the lecture-note PDF extraction workflow."""
-    st.title("Lecture Notes")
-    st.write(
-        "Upload text-based optical communication lecture notes in PDF format. "
-        "OptiLearn AI will extract page text and make it available to the "
-        "grounded AI Tutor during the current session."
-    )
+    render_page_header("Lecture Notes Workspace", "Prepare text-based optical-communication notes for grounded tutoring with page-level provenance.", eyebrow="Lecture Notes")
     st.info(
         "Files are processed in memory for this session and are not written "
         "to the project repository."
@@ -217,6 +244,8 @@ def render_lecture_notes() -> None:
 
     if uploaded_file is None:
         _display_empty_lecture_notes_state()
+        render_next_step("Next: ask grounded questions", "After uploading text-based notes, open AI Tutor for page-cited explanations.", "AI Tutor")
+        render_footer()
         return
 
     pdf_bytes = uploaded_file.getvalue()
@@ -325,21 +354,16 @@ def render_lecture_notes() -> None:
         st.write(
             "- Equations and complex layouts may still require manual verification."
         )
+    render_next_step("Move to grounded tutoring", "Ask the AI Tutor questions that cite retrieved pages from these active notes.", "AI Tutor")
+    render_footer()
 
 
 def render_digital_twin() -> None:
     """Render the educational Digital Twin page."""
-    st.title("Educational Digital Twin")
-    st.write(
-        "This validated OptiLearn AI digital twin demonstrates deterministic "
-        "optical-fiber modelling and educational free-space optical link budgeting."
-    )
-    st.info(
-        "These deterministic models do not include optical noise, receiver detection, "
-        "SNR, BER, eye diagrams, or link availability prediction."
-    )
+    render_page_header("Optical Communication Digital Twin", "Explore link-level behavior for optical fiber and free-space optical communication using deterministic engineering models.", eyebrow="Deterministic Simulation")
+    render_scope_notice("Optical Fiber: attenuation and chromatic dispersion. Free-Space Optical: beam spreading, aperture collection, pointing, and atmospheric attenuation.", "Optical noise, receiver detection, SNR, BER, eye diagrams, turbulence, scintillation, or link availability prediction.")
 
-    st.header("Simulation Parameters")
+    st.header("1. Simulation Controls")
     link_type = st.selectbox(
         "Link Type",
         options=["Optical Fiber", "Free-Space Optical"],
@@ -540,7 +564,7 @@ def render_digital_twin() -> None:
         st.session_state["latest_simulation_link_type"] = "Optical Fiber"
         st.session_state["latest_simulation_evidence"] = simulation_evidence
 
-    st.header("AI Explanation of This Simulation")
+    st.header("5. AI Explanation")
     st.info("Simulation values are calculated deterministically in Python. OpenAI explains the supplied results but does not calculate or modify them.")
     current_simulation_fingerprint = simulation_evidence_fingerprint(simulation_evidence)
     evidence_text = format_simulation_evidence(simulation_evidence)
@@ -552,8 +576,11 @@ def render_digital_twin() -> None:
         st.success("AI simulation explanation cleared.")
 
     if api_key is None:
-        st.warning("OpenAI API access is not configured for AI simulation explanations.")
-        st.write("Add OPENAI_API_KEY to Streamlit Community Cloud app secrets. The deterministic Digital Twin remains fully operational without it.")
+        st.info("Live AI explanation is unavailable because OpenAI API access is not configured. The deterministic simulation and evidence remain fully available.")
+        if _is_demo_mode_enabled():
+            render_status_badge("Demo explanation", "warning")
+            st.write(_build_demo_simulation_text(simulation_evidence))
+            st.caption("Source: Local deterministic template. This is not a live OpenAI response.")
     else:
         with st.form("simulation_ai_explanation_form"):
             explanation_level = st.selectbox("Explanation Level", options=["Foundation", "Engineering", "Research Perspective"], index=1, key="simulation_explanation_level")
@@ -568,7 +595,7 @@ def render_digital_twin() -> None:
             except AuthenticationError:
                 st.error("The OpenAI API key was rejected. Check the app’s secret configuration.")
             except RateLimitError:
-                st.error("The OpenAI API rate limit or usage limit was reached. Please try again later or review API billing.")
+                st.error("The OpenAI API usage limit was reached. Deterministic calculations are unaffected.")
             except APIConnectionError:
                 st.error("OptiLearn AI could not connect to the OpenAI API. Please try again.")
             except APIError:
@@ -588,7 +615,8 @@ def render_digital_twin() -> None:
         else:
             st.caption("Simulation parameters changed. Generate a new AI explanation for the current result.")
 
-
+    render_next_step("Continue with wave and ray intuition", "For guided LP modes, launch coupling, and meridional/skew-ray propagation, open Mode Explorer.", "Mode Explorer")
+    render_footer()
 
 
 QUIZ_SESSION_KEYS = (
@@ -674,11 +702,7 @@ def _render_simulation_quiz_section() -> None:
 
 def render_quiz() -> None:
     """Render the deterministic formative Quiz Lab."""
-    st.title("Quiz Lab")
-    st.write(
-        "Test your understanding of deterministic optical-fiber and free-space optical models. "
-        "Questions are graded locally in Python and do not require OpenAI API access."
-    )
+    render_page_header("Quiz Lab", "Test your understanding with deterministic, locally graded optical-communication questions.", eyebrow="Formative Practice")
     st.info("Quiz results are formative learning feedback, not professional certification or experimental validation.")
 
     question_bank = build_quiz_question_bank()
@@ -720,7 +744,9 @@ def render_quiz() -> None:
     _render_simulation_quiz_section()
 
     if not st.session_state.get("quiz_started"):
-        st.caption("Choose filters and select Start / Refresh Quiz to begin.")
+        st.info("No quiz is active. Choose filters and select Start / Refresh Quiz to begin. Simulations and Mode Explorer remain available while you prepare.")
+        render_next_step("Need a concept to practise?", "Run a Digital Twin simulation first, then create result-specific questions.", "Digital Twin")
+        render_footer()
         return
 
     active_questions = _active_quiz_questions(question_bank)
@@ -785,6 +811,26 @@ def render_quiz() -> None:
             st.write("Continue practising with the deterministic explanations and simulations.")
         st.caption("These are formative descriptors only.")
 
+
+def _build_demo_simulation_text(evidence) -> str:
+    """Build a transparent local explanation from deterministic evidence."""
+    mode = getattr(evidence, "simulation_mode", "FSO power budget")
+    if hasattr(evidence, "total_loss_db"):
+        text = (
+            f"Demo explanation: the deterministic {mode} result reports {evidence.total_loss_db:.6g} dB of fiber loss, "
+            f"{evidence.received_power_mw:.6g} mW received power, and {evidence.remaining_power_percent:.6g}% remaining optical power. "
+            "Use the shown equations to connect the dB loss to the linear power ratio."
+        )
+        if getattr(evidence, "simulation_mode", "") == "Attenuation + Chromatic Dispersion":
+            text += f" The local dispersion evidence reports {evidence.temporal_broadening_ps:.6g} ps broadening and a {evidence.broadening_ratio:.6g} broadening ratio."
+        return text
+    return (
+        f"Demo explanation: the deterministic FSO result reports a {evidence.beam_radius_at_receiver_m:.6g} m beam radius at the receiver, "
+        f"{100 * evidence.geometric_capture_fraction:.6g}% geometric capture, {evidence.received_power_mw:.6g} mW received power, "
+        f"and the {evidence.link_regime} link regime. This local template uses only the calculated evidence above."
+    )
+
+
 def _get_openai_api_key() -> str | None:
     """Return the configured OpenAI API key without storing or displaying it."""
     try:
@@ -834,11 +880,7 @@ def _display_tutor_answer(answer) -> None:
 
 def render_ai_tutor() -> None:
     """Render the grounded AI Tutor page."""
-    st.title("Grounded AI Tutor")
-    st.write(
-        "Ask questions about the active lecture notes. OptiLearn AI retrieves "
-        "relevant page passages before requesting an explanation from OpenAI."
-    )
+    render_page_header("Grounded AI Tutor", "Ask questions answered from retrieved passages in your active lecture notes.", eyebrow="Grounded Tutoring")
     st.info(
         "Answers are grounded in retrieved text from the uploaded PDF. PDF "
         "extraction may not perfectly preserve equations, tables, or multi-column layouts."
@@ -847,8 +889,10 @@ def render_ai_tutor() -> None:
     document = st.session_state.get("active_pdf_document")
     filename = st.session_state.get("active_pdf_filename")
     if not isinstance(document, PDFDocument):
-        st.warning("No active lecture notes are available.")
-        st.write("Open Lecture Notes, upload a text-based PDF, and return to the AI Tutor.")
+        render_status_badge("No lecture notes loaded", "warning")
+        st.info("Open Lecture Notes, upload a text-based PDF, and return to the AI Tutor. Deterministic simulations, Quiz Lab, and Mode Explorer remain available without notes.")
+        render_next_step("Prepare evidence", "Upload lecture notes so answers can include page-level provenance.", "Lecture Notes")
+        render_footer()
         return
 
     if document.is_likely_scanned:
@@ -874,8 +918,13 @@ def render_ai_tutor() -> None:
     api_key = _get_openai_api_key()
     model = _get_openai_model()
     if api_key is None:
-        st.error("OpenAI API access is not configured for this deployment.")
-        st.write("Add OPENAI_API_KEY to Streamlit Community Cloud app secrets. Do not place the key in GitHub.")
+        render_status_badge("API unavailable", "warning")
+        st.info("Live AI tutoring is unavailable because OpenAI API access is not configured. Uploaded notes remain available in this session, and deterministic pages still work.")
+        if _is_demo_mode_enabled():
+            render_status_badge("Demo explanation", "warning")
+            st.write("Demo tutor readiness: local templates can summarize retrieved lecture-note text only when passages are available, and they are not live OpenAI responses.")
+            st.caption("Source: Local deterministic template")
+        render_footer()
         return
 
     if "tutor_messages" not in st.session_state:
@@ -979,8 +1028,7 @@ def _cached_lp_modes(wavelength_nm: float, core_diameter_um: float, n_core: floa
 
 def render_mode_explorer() -> None:
     """Render the educational LP-mode and ray-propagation explorer."""
-    st.title("LP-Mode and Ray-Propagation Explorer")
-    st.write("Explore how Maxwell’s equations lead to scalar LP modes in weakly guiding step-index fibers, and compare wave-optics mode propagation with geometric meridional and skew rays.")
+    render_page_header("LP-Mode and Ray-Propagation Explorer", "Connect Maxwell’s equations to scalar LP modes, Gaussian launch coupling, and geometric ray intuition.", eyebrow="Wave Optics and Ray Optics")
     st.warning("LP modes and geometric rays are complementary educational models. A ray is not an LP mode, and this prototype is not a full-vector electromagnetic solver.")
 
     st.header("1. From Maxwell’s Equations to LP Modes")
@@ -1117,20 +1165,29 @@ LP modes follow from the scalar weak-guidance approximation and are not exact fu
         st.write("- The solver is scalar and weak-guidance only; it omits full-vector families, polarization, birefringence, perturbations, bends, nonlinearities, FEM, BPM, and FDTD.")
         st.write("- Root finding near Bessel-function poles is numerically sensitive and bounded for education.")
         st.write("- Experimental validation would use near-field imaging, interferometric phase measurements, and careful mode decomposition; future extensions could add FEM or BPM.")
+    render_next_step("Test mode intuition", "Open Quiz Lab to practise concepts from deterministic fiber, FSO, mode, and ray explorations.", "Quiz Lab")
+    render_footer()
 
 def render_sidebar() -> str:
     """Render sidebar navigation and return the selected page name."""
+    pages = ["Home", "Lecture Notes", "Digital Twin", "AI Tutor", "Quiz Lab", "Mode Explorer"]
+    requested_page = st.session_state.pop("requested_page", None)
+    if requested_page in pages:
+        st.session_state["sidebar_navigation"] = requested_page
+    index = pages.index(st.session_state.get("sidebar_navigation", "Home")) if st.session_state.get("sidebar_navigation", "Home") in pages else 0
     with st.sidebar:
         st.title("OptiLearn AI")
-        st.caption("Educational Digital Twin")
+        st.caption("AI-Powered Educational Digital Twin")
         st.divider()
-        page = st.radio(
-            "Navigation",
-            options=["Home", "Lecture Notes", "Digital Twin", "AI Tutor", "Quiz Lab", "Mode Explorer"],
-        )
+        page = st.radio("Navigation", options=pages, index=index, key="sidebar_navigation")
+        st.caption(f"Current page: {page}")
         st.divider()
-        st.caption("OpenAI Build Week Hackathon Prototype")
-
+        render_status_badge("Final Build Week Prototype", "success")
+        st.caption("Version: Milestone 11")
+        if _is_demo_mode_enabled():
+            render_status_badge("Demo Mode Enabled", "warning")
+            st.caption("AI demonstrations are local templates and are not live OpenAI responses.")
+        st.caption("Session-based learning tools. No persistent learner profile.")
     return page
 
 
@@ -1151,6 +1208,7 @@ def main() -> None:
         "Mode Explorer": render_mode_explorer,
     }
 
+    inject_global_styles()
     selected_page = render_sidebar()
     pages[selected_page]()
 
