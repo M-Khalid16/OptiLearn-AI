@@ -3,8 +3,6 @@
 **AI-Powered Educational Digital Twin for Optical Communication**
 
 
-**Version 1.0.0**
-
 ## Overview
 
 OptiLearn AI is an interactive engineering-education platform for optical communication. It combines deterministic Python simulations, grounded tutoring from lecture notes, formative assessment, and interactive visualization of optical-fiber modes and ray propagation in one Streamlit workspace.
@@ -309,7 +307,7 @@ OPENAI_API_KEY=""
 
 OPENAI_MODEL=""
 
-OPENAI_MODEL="ADD_VERIFIED_MODEL_NAME"
+OPENAI_MODEL=""
 
 OPTILEARN_DEMO_MODE="false"
 ```
@@ -342,8 +340,6 @@ Suggested sample questions:
 - Why do LP modes help learners visualize guided propagation?
 
 ## Testing
-
-
 
 For Streamlit Community Cloud, use app secrets rather than committing keys:
 
@@ -494,9 +490,6 @@ OptiLearn AI version 1.0.0.
 ## Author
 
 **Dr. Mamoona Khalid**
-
-
-Electrical Engineering educator and optical-communication specialist.
 
 Electrical Engineering Educator; Photonics and Optical-Communication specialist.
 
