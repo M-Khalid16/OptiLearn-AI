@@ -17,6 +17,7 @@ def inject_global_styles() -> None:
     st.markdown(
         """
 <style>
+
 :root { --optilearn-navy:#0f2742; --optilearn-cyan:#0891b2; --optilearn-violet:#6d5bd0; }
 html, body, [class*="css"] { font-family: "Aptos", "Segoe UI", Arial, sans-serif; }
 .optilearn-hero, .optilearn-card, .optilearn-notice, .optilearn-next, .optilearn-footer, .optilearn-panel {
@@ -41,6 +42,25 @@ html, body, [class*="css"] { font-family: "Aptos", "Segoe UI", Arial, sans-serif
 .optilearn-next { border-left: .28rem solid var(--optilearn-violet); }
 .optilearn-footer { font-size:.9rem; color:inherit; opacity:.88; margin-top:2rem; }
 @media (max-width: 760px) { .optilearn-card { min-height: auto; } .optilearn-hero { padding: 1rem; } .optilearn-prose { font-size: 1rem; } }
+
+.optilearn-hero, .optilearn-card, .optilearn-notice, .optilearn-next, .optilearn-footer {
+  border: 1px solid rgba(0, 188, 212, 0.24); border-radius: 1rem; padding: 1rem 1.1rem;
+  background: linear-gradient(135deg, rgba(6, 32, 64, 0.06), rgba(124, 58, 237, 0.05));
+}
+.optilearn-hero { padding: 1.35rem; border-left: 0.35rem solid #00bcd4; }
+.optilearn-eyebrow { color: #0891b2; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: .8rem; }
+.optilearn-card { min-height: 10.5rem; margin-bottom: .75rem; }
+.optilearn-card h3 { margin: .25rem 0 .35rem 0; }
+.optilearn-badge { display:inline-block; border-radius:999px; padding:.18rem .55rem; font-size:.78rem; font-weight:700; margin:.1rem .2rem .35rem 0; border:1px solid currentColor; }
+.badge-neutral { color:#475569; background:rgba(100,116,139,.10); }
+.badge-success { color:#047857; background:rgba(16,185,129,.12); }
+.badge-warning { color:#b45309; background:rgba(245,158,11,.14); }
+.badge-info { color:#0369a1; background:rgba(14,165,233,.12); }
+.optilearn-step-number { font-weight:800; color:#7c3aed; }
+.optilearn-next { border-left: .35rem solid #7c3aed; }
+.optilearn-footer { font-size:.9rem; color:inherit; opacity:.88; margin-top:2rem; }
+@media (max-width: 760px) { .optilearn-card { min-height: auto; } .optilearn-hero { padding: 1rem; } }
+
 </style>
 """,
         unsafe_allow_html=True,
@@ -83,8 +103,13 @@ def render_feature_card(icon: str, title: str, body: str, badge: str | None = No
 
 
 def render_learning_step(number: int, title: str, body: str) -> None:
+
     """Render one learning journey step. The number is accepted for API stability but not displayed."""
     st.markdown(f'<div class="optilearn-card"><h3>{_e(title)}</h3><p>{_e(body)}</p></div>', unsafe_allow_html=True)
+
+    """Render one learning journey step."""
+    st.markdown(f'<div class="optilearn-card"><span class="optilearn-step-number">{number:02d}</span><h3>{_e(title)}</h3><p>{_e(body)}</p></div>', unsafe_allow_html=True)
+
 
 
 def render_scientific_trust_panel() -> None:
@@ -92,11 +117,15 @@ def render_scientific_trust_panel() -> None:
     st.markdown(
         """
 <div class="optilearn-notice"><strong>Built for Scientific Transparency</strong><br>
+
 <strong>Deterministic First:</strong> Python calculates scientific values and validates inputs.<br>
 <strong>Evidence Before Explanation:</strong> AI receives locally prepared simulation evidence or retrieved lecture-note passages.<br>
 <strong>Assumptions Made Visible:</strong> Every model states what is included and excluded.<br>
 <strong>No Invented Performance Claims:</strong> Unsupported BER, SNR, receiver, turbulence, or full-vector results are not fabricated.<br>
 <strong>Learning with Boundaries:</strong> Educational approximations are clearly distinguished from experimental-grade modelling.</div>
+
+Deterministic calculations stay in Python, equations and assumptions are shown, unsupported quantities are not invented, and AI explanations are separated from simulation calculations. Uploaded lecture notes remain session based, and current models are educational approximations.</div>
+
 """,
         unsafe_allow_html=True,
     )

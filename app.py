@@ -101,6 +101,7 @@ def _request_page(page: str) -> None:
 def render_home() -> None:
     """Render the polished project landing page."""
     st.markdown('<div class="optilearn-hero">', unsafe_allow_html=True)
+
     st.markdown('<div class="optilearn-product">OptiLearn AI</div>', unsafe_allow_html=True)
     st.markdown('<div class="optilearn-tagline">AI-Powered Educational Digital Twin for Optical Communication</div>', unsafe_allow_html=True)
     st.markdown('<div class="optilearn-hero-statement">Learn optical communication by exploring the physics and engineering—not just memorizing the equations.</div>', unsafe_allow_html=True)
@@ -113,10 +114,23 @@ def render_home() -> None:
     st.markdown('<p class="optilearn-prose">OptiLearn AI is designed to slow that process down in the right way. It invites learners to question, change parameters, observe results, compare models, inspect evidence, and explain what the physics means.</p>', unsafe_allow_html=True)
 
     c1, c2, c3, c4 = st.columns(4)
+
+    render_page_header(
+        "OptiLearn AI",
+        "AI-Powered Educational Digital Twin for Optical Communication",
+        eyebrow="OpenAI Build Week Prototype",
+        badge="OpenAI Build Week Prototype",
+    )
+    st.header("Learn optical communication by exploring the physics—not just memorizing the equations.")
+    st.write("OptiLearn AI combines grounded tutoring, deterministic digital twins, formative quizzes, and interactive optical-fiber mode visualization in one educational workspace.")
+    st.info("Scientific values are calculated in deterministic Python models. AI is used only for grounded explanations and tutoring.")
+    c1, c2, c3 = st.columns(3)
+
     if c1.button("Explore the Digital Twin", use_container_width=True):
         _request_page("Digital Twin")
     if c2.button("Open Mode Explorer", use_container_width=True):
         _request_page("Mode Explorer")
+
     if c3.button("Prepare Lecture Notes", use_container_width=True):
         _request_page("Lecture Notes")
     if c4.button("See the Learning Experience", use_container_width=True):
@@ -206,6 +220,57 @@ def render_home() -> None:
         _request_page("Digital Twin")
     if b.button("Explore Optical-Fiber Modes", use_container_width=True):
         _request_page("Mode Explorer")
+
+    if c3.button("Upload Lecture Notes", use_container_width=True):
+        _request_page("Lecture Notes")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.header("Core Capabilities")
+    cards = [
+        ("📄", "Lecture Notes", "Upload text-based PDFs and preserve page-level evidence."),
+        ("🔬", "Digital Twin", "Explore deterministic fiber attenuation, dispersion, and FSO link budgets."),
+        ("💬", "Grounded AI Tutor", "Ask questions answered from retrieved lecture-note passages."),
+        ("✓", "Quiz Lab", "Practise with deterministic, locally graded optical-communication questions."),
+        ("◎", "Mode Explorer", "Examine scalar LP modes, launch coupling, meridional rays, and skew rays."),
+        ("ℹ", "Scientific Transparency", "See equations, assumptions, limitations, and deterministic evidence."),
+    ]
+    for row in (cards[:3], cards[3:]):
+        cols = st.columns(3)
+        for col, card in zip(cols, row, strict=True):
+            with col:
+                render_feature_card(*card)
+
+    st.header("A Guided Learning Journey")
+    steps = [
+        (1, "Upload", "Add text-based optical-communication lecture notes."),
+        (2, "Understand", "Ask grounded questions with page-level evidence."),
+        (3, "Explore", "Change physical parameters in deterministic simulations."),
+        (4, "Practise", "Test understanding with formative quizzes."),
+        (5, "Investigate", "Explore LP modes, Gaussian coupling, and ray propagation."),
+    ]
+    cols = st.columns(2)
+    for i, step in enumerate(steps):
+        with cols[i % 2]:
+            render_learning_step(*step)
+
+    st.header("What You Can Explore")
+    models = [
+        ("Fiber attenuation", "Calculates dB loss and received power; useful for link-loss intuition; limited to ideal attenuation without noise."),
+        ("Chromatic dispersion", "Calculates temporal broadening; useful for symbol-spreading intuition; not a full optical-field or receiver model."),
+        ("Free-space optical links", "Calculates beam spreading, aperture capture, pointing loss, and atmospheric loss; omits turbulence and scintillation."),
+        ("Scalar LP modes", "Solves guided weak-guidance mode families; connects V-number to fields; not full-vector FEM/BPM/FDTD."),
+        ("Meridional and skew rays", "Traces geometric ray paths; useful for acceptance intuition; rays are not wave modes."),
+        ("Gaussian launch coupling", "Computes overlap with displayed scalar modes; useful for alignment intuition; not an experimental power measurement."),
+    ]
+    for title, body in models:
+        render_feature_card("•", title, body)
+
+    render_scientific_trust_panel()
+    st.header("Start Exploring")
+    st.write("Start with a deterministic simulation, then use the explanations and quizzes to test your understanding.")
+    if st.button("Start Exploring", type="primary"):
+        _request_page("Digital Twin")
+
     render_footer()
 
 
@@ -1215,21 +1280,34 @@ def render_sidebar() -> str:
     pages = ["Home", "Lecture Notes", "Digital Twin", "AI Tutor", "Quiz Lab", "Mode Explorer"]
     requested_page = st.session_state.pop("requested_page", None)
     if requested_page in pages:
+
         st.session_state["current_page"] = requested_page
         st.session_state["navigation_generation"] = st.session_state.get("navigation_generation", 0) + 1
     current_page = st.session_state.get("current_page", "Home")
     index = pages.index(current_page) if current_page in pages else 0
     navigation_key = f"sidebar_navigation_{st.session_state.get('navigation_generation', 0)}"
+
+        st.session_state["sidebar_navigation"] = requested_page
+    index = pages.index(st.session_state.get("sidebar_navigation", "Home")) if st.session_state.get("sidebar_navigation", "Home") in pages else 0
+
     with st.sidebar:
         st.title("OptiLearn AI")
         st.caption("AI-Powered Educational Digital Twin")
         st.divider()
+
         page = st.radio("Navigation", options=pages, index=index, key=navigation_key)
         st.session_state["current_page"] = page
         st.caption(f"Current page: {page}")
         st.divider()
         st.caption("Educational Engineering Platform")
         st.caption("Version 1.0.0")
+
+        page = st.radio("Navigation", options=pages, index=index, key="sidebar_navigation")
+        st.caption(f"Current page: {page}")
+        st.divider()
+        render_status_badge("Final Build Week Prototype", "success")
+        st.caption("Version: Milestone 11")
+
         if _is_demo_mode_enabled():
             render_status_badge("Demo Mode Enabled", "warning")
             st.caption("AI demonstrations are local templates and are not live OpenAI responses.")
