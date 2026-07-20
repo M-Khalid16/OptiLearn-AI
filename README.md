@@ -2,7 +2,72 @@
 
 **AI-Powered Educational Digital Twin for Optical Communication**
 
+
 **Version 1.0.0**
+
+
+
+
+
+OptiLearn AI is an interactive engineering-education platform for optical communication. It combines deterministic Python simulations, grounded tutoring from lecture notes, formative assessment, and interactive visualization of optical-fiber modes and ray propagation in one Streamlit workspace.
+
+The platform helps learners move from reading equations to changing parameters, observing physical consequences, inspecting assumptions, and testing their understanding.
+
+Most of the application works without OpenAI API access. Live grounded tutoring and live AI explanations require configured API access.
+
+Repository URL: https://github.com/M-Khalid16/OptiLearn-AI
+
+## Live Application
+
+**Launch OptiLearn AI:**
+https://optilearn-ai-h3dgt9c9onvohsxi2u2aa4.streamlit.app/
+
+Most deterministic features work without OpenAI API access. Live grounded tutoring and live AI explanations require configured API access.
+
+## Why OptiLearn AI
+
+Students have access to more information than ever, but information alone does not create deep engineering understanding. Optical communication is particularly challenging because attenuation, dispersion, guided modes, beam spreading, coupling, and propagation are physically invisible and mathematically abstract.
+
+OptiLearn AI is designed to support active learning by helping learners:
+
+- question source material;
+- manipulate engineering parameters;
+- visualize cause and effect;
+- compare physical models;
+- inspect assumptions and limitations;
+- practise with formative questions;
+- connect mathematical results with physical meaning;
+- revisit difficult concepts through structured exploration.
+
+The platform is designed to support learning opportunities. It does not claim experimentally measured educational outcomes and does not replace laboratory teaching, expert supervision, or formal assessment.
+
+## What the Application Does
+
+OptiLearn AI guides learners through a practical engineering-learning workflow:
+
+1. Prepare text-based lecture notes.
+2. Preserve page-level provenance.
+3. Ask evidence-grounded questions.
+4. Run deterministic optical-link simulations.
+5. Inspect plots, metrics, equations, and assumptions.
+6. Request explanations of calculated evidence.
+7. Practise with deterministic formative quizzes.
+8. Explore LP modes, Gaussian launch coupling, meridional rays, and skew rays.
+9. Revisit concepts based on observed results.
+
+## Learner Workflow
+
+```mermaid
+flowchart LR
+    A[Prepare lecture notes] --> B[Ask grounded questions]
+    B --> C[Run deterministic simulations]
+    C --> D[Inspect plots and assumptions]
+    D --> E[Review explanations]
+    E --> F[Practise in Quiz Lab]
+    F --> G[Explore modes and rays]
+    G --> H[Reflect and revisit concepts]
+```
+
 
 ## Overview
 
@@ -114,6 +179,19 @@ OptiLearn AI uses educational deterministic approximations intended for learning
 
 These models are designed for conceptual education, not certified system design.
 
+
+
+- **Fiber attenuation:** received optical power versus distance using attenuation in dB/km.
+- **Chromatic dispersion:** pulse broadening from dispersion coefficient, spectral width, and distance.
+- **Free-space optical link budget:** transmitted power, geometric spreading, aperture collection, atmospheric attenuation, pointing loss, and received power.
+- **LP mode exploration:** scalar weak-guidance approximations for optical-fiber mode shapes.
+- **Gaussian launch coupling:** overlap-style educational estimate for coupling into supported modes.
+- **Ray tracing:** idealized meridional and skew ray paths for geometric intuition.
+- **Quiz Lab:** locally graded formative questions generated from deterministic question banks and simulation outputs.
+
+These models are designed for conceptual education, not certified system design.
+
+
 ## Deterministic Python versus OpenAI
 
 | Capability | Implementation | OpenAI required? |
@@ -199,11 +277,44 @@ Create local environment variables as needed:
 
 ```bash
 OPENAI_API_KEY=""
+
+OPENAI_MODEL=""
+
 OPENAI_MODEL="ADD_VERIFIED_MODEL_NAME"
+
 OPTILEARN_DEMO_MODE="false"
 ```
 
 ### Streamlit secrets
+
+For Streamlit Community Cloud, use app secrets rather than committing keys:
+
+```toml
+OPENAI_API_KEY = ""
+OPENAI_MODEL = "your-verified-model-name"
+OPTILEARN_DEMO_MODE = "false"
+```
+
+Do not commit real API keys, `.env` files containing secrets, or Streamlit secrets files. Use a verified OpenAI model name only after confirming it for your deployment.
+
+## Sample Lecture Notes
+
+Sample project-authored notes are included for reviewers and learners:
+
+- `examples/sample_optical_notes.md` contains original project-authored sample content.
+
+The repository includes the original sample notes as Markdown to keep the source reviewable. To test the PDF workflow, export this file to a text-based PDF using a word processor or browser print-to-PDF function before uploading it to the **Lecture Notes** page. Scanned or image-only PDFs are not supported because OCR is not included. After uploading an exported text-based PDF, inspect page-level text and metadata, then ask grounded questions in **AI Tutor** if OpenAI access is configured.
+
+Suggested sample questions:
+
+- What is attenuation and why is it measured in dB/km?
+- How does chromatic dispersion broaden a pulse?
+- What assumptions are used in the FSO link example?
+- Why do LP modes help learners visualize guided propagation?
+
+## Testing
+
+
 
 For Streamlit Community Cloud, use app secrets rather than committing keys:
 
@@ -237,6 +348,7 @@ Suggested sample questions:
 
 ## Testing
 
+
 Run the checks below from the repository root after installing dependencies:
 
 ```bash
@@ -268,6 +380,9 @@ Additional release-readiness checks are documented in `TESTING.md`.
 6. Deploy the app.
 7. Optional: add `OPENAI_API_KEY`, `OPENAI_MODEL`, and `OPTILEARN_DEMO_MODE` in Streamlit secrets.
 8. Validate all six pages after deployment.
+
+
+Use `DEPLOYMENT.md` for a fuller deployment checklist. The verified deployed app URL is `https://optilearn-ai-h3dgt9c9onvohsxi2u2aa4.streamlit.app/`.
 
 Use `DEPLOYMENT.md` for a fuller deployment checklist. After deployment, replace `ADD_DEPLOYMENT_URL` in release notes or external submission material with the verified deployed app URL.
 
@@ -345,7 +460,7 @@ OptiLearn AI version 1.0.0.
 
 **Dr. Mamoona Khalid**
 
-Electrical Engineering educator and optical-communication specialist.
+Electrical Engineering Educator; Photonics and Optical-Communication specialist.
 
 ## License
 
