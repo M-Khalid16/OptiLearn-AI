@@ -44,11 +44,26 @@ from src.simulation_explainer import (
     generate_simulation_explanation,
     simulation_evidence_fingerprint,
 )
+from src.lp_mode_solver import (
+    calculate_gaussian_launch_field,
+    calculate_longitudinal_mode_slice,
+    calculate_lp_mode_field,
+    calculate_lp_mode_intensity,
+    calculate_mode_coupling,
+    solve_lp_modes,
+)
+from src.ray_tracer import RayLaunch, trace_meridional_ray, trace_skew_ray
 from src.visualizations import (
     create_dispersion_comparison_figure,
     create_fso_beam_profile_figure,
     create_fso_power_budget_figure,
     create_signal_comparison_figure,
+    create_launch_field_figure,
+    create_lp_mode_cross_section_figure,
+    create_lp_mode_longitudinal_figure,
+    create_meridional_ray_figure,
+    create_mode_coupling_figure,
+    create_skew_ray_figure,
 )
 
 
@@ -114,10 +129,9 @@ def render_home() -> None:
         st.write(step)
 
     st.info(
-        "This Build Week prototype is under active development. The Digital Twin "
-        "now includes deterministic fiber simulation, chromatic dispersion, "
-        "FSO link budgeting, grounded tutoring, formative quizzes, and AI "
-        "explanations when API access is configured."
+        "OptiLearn AI now includes deterministic fiber and FSO simulations, "
+        "Quiz Lab, LP-mode profiles, Gaussian launch coupling, and meridional "
+        "and skew-ray visualization."
     )
 
 
@@ -946,6 +960,164 @@ def render_ai_tutor() -> None:
                 st.caption(f"Model used: {item['model']}")
 
 
+
+
+def _mode_explorer_presets() -> dict[str, dict[str, float]]:
+    """Return deterministic Mode Explorer fiber presets."""
+    return {
+        "Single-Mode Example": {"wavelength_nm": 1550.0, "core_diameter_um": 8.2, "n_core": 1.450, "n_cladding": 1.444},
+        "Few-Mode Example": {"wavelength_nm": 1310.0, "core_diameter_um": 15.0, "n_core": 1.450, "n_cladding": 1.444},
+        "Multimode Example": {"wavelength_nm": 850.0, "core_diameter_um": 50.0, "n_core": 1.457, "n_cladding": 1.440},
+    }
+
+
+@st.cache_data(show_spinner=False)
+def _cached_lp_modes(wavelength_nm: float, core_diameter_um: float, n_core: float, n_cladding: float, maximum_modes: int):
+    """Cache deterministic scalar LP mode summaries for scalar inputs only."""
+    return solve_lp_modes(wavelength_nm, core_diameter_um, n_core, n_cladding, max_modes=maximum_modes)
+
+
+def render_mode_explorer() -> None:
+    """Render the educational LP-mode and ray-propagation explorer."""
+    st.title("LP-Mode and Ray-Propagation Explorer")
+    st.write("Explore how Maxwell’s equations lead to scalar LP modes in weakly guiding step-index fibers, and compare wave-optics mode propagation with geometric meridional and skew rays.")
+    st.warning("LP modes and geometric rays are complementary educational models. A ray is not an LP mode, and this prototype is not a full-vector electromagnetic solver.")
+
+    st.header("1. From Maxwell’s Equations to LP Modes")
+    with st.expander("From Maxwell to the Scalar Wave Equation", expanded=False):
+        st.markdown(r"""
+Source-free Maxwell equations in a linear, isotropic, nonmagnetic dielectric:
+
+$\nabla \times E = -\mu_0 \partial H/\partial t$,  $\nabla \times H = \epsilon \partial E/\partial t$,  $\nabla \cdot (\epsilon E)=0$,  $\nabla \cdot H=0$.
+
+For a homogeneous region and harmonic fields $E(r,t)=\mathrm{Re}\{E(r)e^{-i\omega t}\}$, the vector wave equation is $\nabla^2 E+n^2k_0^2E=0$ where $k_0=2\pi/\lambda$.
+
+Under weak guidance, $n_1 \approx n_2$ and $\Delta=(n_1^2-n_2^2)/(2n_1^2)\ll1$, a scalar transverse field $\Psi(r,\phi,z)=\psi(r,\phi)e^{i\beta z}$ gives $\nabla_t^2\psi+(n^2k_0^2-\beta^2)\psi=0$.
+
+For a circular step-index fiber, $n(r)=n_1$ for $r<a$ and $n(r)=n_2$ for $r\ge a$. Define $u=a\sqrt{n_1^2k_0^2-\beta^2}$, $w=a\sqrt{\beta^2-n_2^2k_0^2}$, $V^2=u^2+w^2$, $V=k_0a\sqrt{n_1^2-n_2^2}$, and $n_\mathrm{eff}=\beta/k_0$.
+
+LP modes follow from the scalar weak-guidance approximation and are not exact full-vector HE, EH, TE, or TM modes.
+""")
+
+    st.header("2. Fiber Parameters")
+    presets = _mode_explorer_presets()
+    preset = st.selectbox("Fiber Preset", [*presets.keys(), "Custom"], key="mode_explorer_preset")
+    defaults = presets.get(preset, presets["Single-Mode Example"])
+    previous_preset = st.session_state.get("mode_explorer_previous_preset")
+    if preset != "Custom" and previous_preset != preset:
+        st.session_state["mode_explorer_wavelength_nm"] = defaults["wavelength_nm"]
+        st.session_state["mode_explorer_core_diameter_um"] = defaults["core_diameter_um"]
+        st.session_state["mode_explorer_n_core"] = defaults["n_core"]
+        st.session_state["mode_explorer_n_cladding"] = defaults["n_cladding"]
+    st.session_state["mode_explorer_previous_preset"] = preset
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        wavelength_nm = st.number_input("Wavelength (nm)", 400.0, 2000.0, defaults["wavelength_nm"], 10.0, key="mode_explorer_wavelength_nm")
+        core_diameter_um = st.number_input("Core Diameter (µm)", 2.0, 200.0, defaults["core_diameter_um"], 0.1, key="mode_explorer_core_diameter_um")
+    with c2:
+        n_core = st.number_input("Core Refractive Index", 1.001, 2.5, defaults["n_core"], 0.001, format="%.6f", key="mode_explorer_n_core")
+        n_cladding = st.number_input("Cladding Refractive Index", 1.001, 2.5, defaults["n_cladding"], 0.001, format="%.6f", key="mode_explorer_n_cladding")
+    with c3:
+        displayed_fiber_length_m = st.number_input("Displayed Fiber Length (m)", 0.01, 10.0, 1.0, 0.1, key="mode_explorer_displayed_length")
+        maximum_modes = st.slider("Maximum LP Modes", 1, 30, 20, 1, key="mode_explorer_maximum_modes")
+
+    try:
+        result = _cached_lp_modes(float(wavelength_nm), float(core_diameter_um), float(n_core), float(n_cladding), int(maximum_modes))
+    except ValueError as error:
+        st.error(f"Mode Explorer input error: {error}")
+        return
+
+    st.header("3. Guided Mode Summary")
+    metrics = st.columns(6)
+    for column, (label, value) in zip(metrics, [("Numerical Aperture", f"{result.numerical_aperture:.4f}"), ("Acceptance Angle", f"{result.acceptance_angle_deg:.3f}°"), ("Critical Angle", f"{result.critical_angle_deg:.3f}°"), ("V Number", f"{result.v_number:.3f}"), ("Approx. Mode Count", f"{result.approximate_mode_count:.1f}"), ("Guided LP Families Found", str(len(result.guided_modes)))], strict=True):
+        column.metric(label, value)
+    st.success("Single-mode under scalar LP criterion" if result.is_single_mode else "Multimode under scalar LP criterion")
+    st.caption("The V²/2 mode-count approximation is intended for large V, commonly includes polarization degeneracy, and is not exact near cutoff. LP01 remains guided while higher-order families are cut off below the first higher-order cutoff.")
+    st.caption("LP01 uses a documented educational fundamental-mode approximation in this prototype; higher-order modes are included only when the scalar characteristic equation has a validated numerical root.")
+    st.dataframe([{"Mode": m.label, "l": m.azimuthal_order, "m": m.radial_order, "u": m.u, "w": m.w, "n_eff": m.effective_index, "β in rad/m": m.beta_per_m, "normalized b": m.normalized_propagation_constant, "cutoff V": m.cutoff_v, "guided status": m.is_guided} for m in result.guided_modes], width="stretch")
+    if not result.guided_modes:
+        st.warning("No finite guided scalar LP modes were found for these inputs.")
+        return
+
+    mode_labels = [m.label for m in result.guided_modes]
+    selected_label = st.selectbox("Selected LP Mode", mode_labels, index=mode_labels.index("LP01") if "LP01" in mode_labels else 0, key="mode_explorer_selected_mode")
+    base_mode = next(m for m in result.guided_modes if m.label == selected_label)
+    orientation = "Circularly symmetric"
+    if base_mode.azimuthal_order > 0:
+        orientation = st.radio("Orientation", ["cos(lφ)", "sin(lφ)"], horizontal=True, key="mode_explorer_orientation")
+    selected_mode = base_mode if base_mode.orientation == orientation else type(base_mode)(**{**base_mode.__dict__, "orientation": orientation})
+
+    st.header("4. LP Mode Cross Section")
+    x_m, y_m, field = calculate_lp_mode_field(selected_mode, result)
+    intensity = calculate_lp_mode_intensity(field)
+    st.plotly_chart(create_lp_mode_cross_section_figure(x_m, y_m, intensity, result.core_radius_m, selected_mode.label), width="stretch")
+
+    st.header("5. Longitudinal Mode Propagation")
+    long_display = st.selectbox("Longitudinal Display", ["Field Phase", "Intensity"], key="mode_explorer_longitudinal_display")
+    xs, zs, real_field, long_intensity = calculate_longitudinal_mode_slice(selected_mode, result, float(displayed_fiber_length_m))
+    st.plotly_chart(create_lp_mode_longitudinal_figure(xs, zs, real_field, long_intensity, selected_mode.label, long_display), width="stretch")
+    st.caption(f"Actual β = {selected_mode.beta_per_m:.6g} rad/m. The visible phase period is compressed for visualization and does not overwrite the calculated β; one ideal mode has z-invariant intensity in a uniform fiber.")
+
+    st.header("6. Gaussian Launch and Modal Coupling")
+    l1, l2, l3 = st.columns(3)
+    with l1:
+        beam_diameter_um = st.number_input("Launch Beam Diameter (µm)", 0.5, 200.0, float(result.core_diameter_um), 0.1, key="mode_explorer_beam_diameter")
+        offset_x_um = st.number_input("Beam Offset X (µm)", -100.0, 100.0, 0.0, 0.1, key="mode_explorer_offset_x")
+    with l2:
+        offset_y_um = st.number_input("Beam Offset Y (µm)", -100.0, 100.0, 0.0, 0.1, key="mode_explorer_offset_y")
+        launch_angle_deg = st.number_input("Launch Angle (degrees)", 0.0, 89.0, 0.0, 0.1, key="mode_explorer_launch_angle")
+    with l3:
+        launch_azimuth_deg = st.number_input("Launch Azimuth (degrees)", 0.0, 360.0, 0.0, 1.0, key="mode_explorer_launch_azimuth")
+    st.info("Inside acceptance cone" if launch_angle_deg <= result.acceptance_angle_deg else "Outside acceptance cone")
+    st.caption("Acceptance describes guided ray eligibility in this ideal model; it does not guarantee coupling only into calculated guided LP modes.")
+    launch_x, launch_y, launch_field = calculate_gaussian_launch_field(result, beam_diameter_um, offset_x_um, offset_y_um, launch_angle_deg, launch_azimuth_deg)
+    st.plotly_chart(create_launch_field_figure(launch_x, launch_y, launch_field, result.core_radius_m, offset_x_um, offset_y_um, launch_azimuth_deg), width="stretch")
+    couplings = calculate_mode_coupling(launch_field, result.guided_modes, result, maximum_modes=min(20, maximum_modes))
+    if couplings:
+        st.metric("Dominant Coupled Mode", couplings[0].mode_label, f"{100 * couplings[0].coupling_fraction:.2f}%")
+    st.dataframe([{"Mode": c.mode_label, "Coupling fraction": c.coupling_fraction, "Coupling percentage": 100 * c.coupling_fraction} for c in couplings], width="stretch")
+    st.metric("Represented guided-mode overlap total", f"{100 * sum(c.coupling_fraction for c in couplings):.2f}%")
+    st.caption("This total is the sum over the finite scalar LP modes calculated and displayed. It is not an experimental power measurement and may not include radiation or omitted higher-order modes.")
+    st.plotly_chart(create_mode_coupling_figure(couplings, top_n=10), width="stretch")
+
+    st.header("7. Meridional and Skew Rays")
+    r1, r2, r3 = st.columns(3)
+    with r1:
+        ray_type = st.selectbox("Ray Type", ["Meridional Ray", "Skew Ray"], key="mode_explorer_ray_type")
+        ray_length = st.number_input("Ray Fiber Length (m)", 0.01, 10.0, min(float(displayed_fiber_length_m), 1.0), 0.01, key="mode_explorer_ray_length")
+    with r2:
+        ray_angle = st.number_input("Ray Launch Angle (degrees)", 0.0, min(30.0, max(result.acceptance_angle_deg * 1.5, 1.0)), min(result.acceptance_angle_deg * 0.6, 5.0), 0.1, key="mode_explorer_ray_angle")
+        ray_azimuth = st.number_input("Ray Launch Azimuth (degrees)", 0.0, 360.0, 45.0 if ray_type == "Skew Ray" else 0.0, 1.0, key="mode_explorer_ray_azimuth")
+    with r3:
+        radial_offset = st.slider("Radial Offset Fraction", 0.0, 0.95, 0.35 if ray_type == "Skew Ray" else 0.0, 0.01, key="mode_explorer_ray_offset")
+    launch = RayLaunch(ray_type, float(ray_angle), float(ray_azimuth if ray_type == "Skew Ray" else 0.0), float(max(radial_offset, 0.05) if ray_type == "Skew Ray" else radial_offset), float(ray_length), result.core_radius_m, result.n_core, result.n_cladding)
+    try:
+        ray = trace_skew_ray(launch) if ray_type == "Skew Ray" else trace_meridional_ray(launch)
+        st.info(ray.message)
+        st.metric("Ray acceptance status", "Accepted" if ray.is_accepted else "Rejected")
+        st.metric("Reflection count", ray.reflection_count)
+        fig = create_skew_ray_figure(ray, result.core_radius_m) if ray_type == "Skew Ray" else create_meridional_ray_figure(ray, result.core_radius_m)
+        st.plotly_chart(fig, width="stretch")
+    except ValueError as error:
+        st.error(f"Ray-tracing input error: {error}")
+
+    st.header("8. Assumptions and Limitations")
+    foundation_tab, engineering_tab, research_tab = st.tabs(["Foundation", "Engineering", "Research Perspective"])
+    with foundation_tab:
+        st.write("- The core has a slightly higher refractive index than the cladding, enabling total internal reflection for accepted rays.")
+        st.write("- LP mode patterns are wave-optics standing transverse field patterns; rays are geometric paths and are not LP modes.")
+        st.write("- Launch alignment, offset, and tilt change which calculated scalar modes receive overlap.")
+    with engineering_tab:
+        st.latex(r"uJ_l'(u)/J_l(u)=wK_l'(w)/K_l(w)")
+        st.latex(r"\eta_{lm}=|\iint E_{launch}E_{lm}^*dA|^2/(\iint |E_{launch}|^2dA\,\iint |E_{lm}|^2dA)")
+        st.write("- V, NA, β, n_eff, u, and w summarize guiding strength and modal phase propagation.")
+        st.write("- Meridional rays cross the axis; skew rays carry azimuthal motion and avoid the axis.")
+        st.write("- Cutoff values identify when higher-order scalar LP families become guided.")
+    with research_tab:
+        st.write("- The solver is scalar and weak-guidance only; it omits full-vector families, polarization, birefringence, perturbations, bends, nonlinearities, FEM, BPM, and FDTD.")
+        st.write("- Root finding near Bessel-function poles is numerically sensitive and bounded for education.")
+        st.write("- Experimental validation would use near-field imaging, interferometric phase measurements, and careful mode decomposition; future extensions could add FEM or BPM.")
+
 def render_sidebar() -> str:
     """Render sidebar navigation and return the selected page name."""
     with st.sidebar:
@@ -954,7 +1126,7 @@ def render_sidebar() -> str:
         st.divider()
         page = st.radio(
             "Navigation",
-            options=["Home", "Lecture Notes", "Digital Twin", "AI Tutor", "Quiz Lab"],
+            options=["Home", "Lecture Notes", "Digital Twin", "AI Tutor", "Quiz Lab", "Mode Explorer"],
         )
         st.divider()
         st.caption("OpenAI Build Week Hackathon Prototype")
@@ -976,6 +1148,7 @@ def main() -> None:
         "Digital Twin": render_digital_twin,
         "AI Tutor": render_ai_tutor,
         "Quiz Lab": render_quiz,
+        "Mode Explorer": render_mode_explorer,
     }
 
     selected_page = render_sidebar()
