@@ -14,6 +14,19 @@ from src.ai_tutor import (
     validate_answer_citations,
 )
 from src.pdf_parser import PDFDocument, extract_pdf_document
+from src.quiz_engine import (
+    ALL_LEVELS,
+    ALL_TOPICS,
+    SUPPORTED_LEVELS,
+    SUPPORTED_TOPICS,
+    QuizQuestion,
+    build_fiber_result_questions,
+    build_fso_result_questions,
+    build_quiz_question_bank,
+    evaluate_quiz_answer,
+    filter_quiz_questions,
+    summarize_quiz_attempts,
+)
 
 from src.fso_simulator import (
     build_fso_educational_observations,
@@ -51,8 +64,8 @@ def render_home() -> None:
         "OptiLearn AI helps engineering students upload optical communication "
         "lecture notes, receive AI-assisted explanations for difficult "
         "concepts, interact with an educational Digital Twin, visualize optical "
-        "communication behaviour, and build engineering intuition beyond "
-        "memorizing equations."
+        "communication behaviour, practise with deterministic formative quizzes, "
+        "and build engineering intuition beyond memorizing equations."
     )
 
     columns = st.columns(3)
@@ -102,9 +115,9 @@ def render_home() -> None:
 
     st.info(
         "This Build Week prototype is under active development. The Digital Twin "
-        "now includes deterministic optical-fiber attenuation, educational "
-        "chromatic dispersion, deterministic free-space optical link budgeting, "
-        "and AI explanations when API access is configured."
+        "now includes deterministic fiber simulation, chromatic dispersion, "
+        "FSO link budgeting, grounded tutoring, formative quizzes, and AI "
+        "explanations when API access is configured."
     )
 
 
@@ -405,6 +418,8 @@ def render_digital_twin() -> None:
                 st.write(f"- {observation}")
 
         simulation_evidence = build_fso_simulation_evidence(result)
+        st.session_state["latest_simulation_link_type"] = "Free-Space Optical"
+        st.session_state["latest_simulation_evidence"] = simulation_evidence
     else:
         simulation_mode = st.selectbox(
             "Simulation Mode",
@@ -508,6 +523,8 @@ def render_digital_twin() -> None:
             for observation in observations["research"]:
                 st.write(f"- {observation}")
         simulation_evidence = build_simulation_evidence(result)
+        st.session_state["latest_simulation_link_type"] = "Optical Fiber"
+        st.session_state["latest_simulation_evidence"] = simulation_evidence
 
     st.header("AI Explanation of This Simulation")
     st.info("Simulation values are calculated deterministically in Python. OpenAI explains the supplied results but does not calculate or modify them.")
@@ -558,6 +575,201 @@ def render_digital_twin() -> None:
             st.caption("Simulation parameters changed. Generate a new AI explanation for the current result.")
 
 
+
+
+QUIZ_SESSION_KEYS = (
+    "quiz_active_question_ids",
+    "quiz_attempts",
+    "quiz_topic_filter",
+    "quiz_level_filter",
+    "quiz_question_count",
+    "quiz_started",
+    "quiz_dynamic_questions",
+)
+
+
+def _reset_current_quiz() -> None:
+    """Clear only the active quiz and latest attempts."""
+    st.session_state.pop("quiz_active_question_ids", None)
+    st.session_state.pop("quiz_attempts", None)
+    st.session_state["quiz_started"] = False
+
+
+def _clear_quiz_progress() -> None:
+    """Clear all quiz-specific session keys only."""
+    for key in QUIZ_SESSION_KEYS:
+        st.session_state.pop(key, None)
+
+
+def _question_count_limit(selection: str, available_count: int) -> int:
+    """Return deterministic quiz length from selector text."""
+    return available_count if selection == "All Available" else min(int(selection), available_count)
+
+
+def _active_quiz_questions(question_bank: tuple[QuizQuestion, ...]) -> tuple[QuizQuestion, ...]:
+    """Resolve active session question IDs against base and dynamic banks."""
+    dynamic_questions = tuple(st.session_state.get("quiz_dynamic_questions", ()))
+    question_by_id = {question.id: question for question in (*question_bank, *dynamic_questions)}
+    return tuple(
+        question_by_id[question_id]
+        for question_id in st.session_state.get("quiz_active_question_ids", ())
+        if question_id in question_by_id
+    )
+
+
+def _render_simulation_quiz_section() -> None:
+    """Render deterministic quiz creation from current scalar simulation state."""
+    st.header("Quiz the Current Simulation")
+    latest_link_type = st.session_state.get("latest_simulation_link_type")
+    latest_result = st.session_state.get("latest_simulation_evidence")
+    if latest_result is None or latest_link_type not in {"Optical Fiber", "Free-Space Optical"}:
+        st.info("Run a Digital Twin simulation first to create result-specific questions.")
+        return
+
+    st.write(f"Current link type: {latest_link_type}")
+    if latest_link_type == "Optical Fiber":
+        st.write(f"Current mode: {latest_result.simulation_mode}")
+        st.write(f"Total loss: {latest_result.total_loss_db:.6g} dB")
+        st.write(f"Received power: {latest_result.received_power_mw:.6g} mW")
+        st.write(f"Bit duration: {latest_result.bit_duration_ns:.6g} ns")
+        if latest_result.simulation_mode == "Attenuation + Chromatic Dispersion":
+            st.write(f"Broadening ratio: {latest_result.broadening_ratio:.6g}")
+            st.write(f"Dispersion regime: {latest_result.dispersion_regime}")
+    else:
+        st.write("Current mode: FSO power budget")
+        st.write(f"Beam radius at receiver: {latest_result.beam_radius_at_receiver_m:.6g} m")
+        st.write(f"Geometric capture: {100 * latest_result.geometric_capture_fraction:.6g} %")
+        st.write(f"Received power: {latest_result.received_power_mw:.6g} mW")
+        st.write(f"Link regime: {latest_result.link_regime}")
+
+    if st.button("Create Quiz from Current Simulation"):
+        questions = (
+            build_fiber_result_questions(latest_result)
+            if latest_link_type == "Optical Fiber"
+            else build_fso_result_questions(latest_result)
+        )
+        st.session_state["quiz_dynamic_questions"] = questions
+        st.session_state["quiz_active_question_ids"] = tuple(question.id for question in questions)
+        st.session_state["quiz_attempts"] = {}
+        st.session_state["quiz_topic_filter"] = "Current Simulation"
+        st.session_state["quiz_level_filter"] = "Mixed"
+        st.session_state["quiz_question_count"] = "All Available"
+        st.session_state["quiz_started"] = True
+        st.rerun()
+
+
+def render_quiz() -> None:
+    """Render the deterministic formative Quiz Lab."""
+    st.title("Quiz Lab")
+    st.write(
+        "Test your understanding of deterministic optical-fiber and free-space optical models. "
+        "Questions are graded locally in Python and do not require OpenAI API access."
+    )
+    st.info("Quiz results are formative learning feedback, not professional certification or experimental validation.")
+
+    question_bank = build_quiz_question_bank()
+    topic_options = (ALL_TOPICS, *SUPPORTED_TOPICS)
+    level_options = (ALL_LEVELS, *SUPPORTED_LEVELS)
+    count_options = ("5", "10", "15", "All Available")
+
+    control_columns = st.columns(3)
+    with control_columns[0]:
+        selected_topic = st.selectbox("Topic selector", options=topic_options, index=0, key="quiz_topic_selector")
+    with control_columns[1]:
+        selected_level = st.selectbox("Learning Level selector", options=level_options, index=0, key="quiz_level_selector")
+    with control_columns[2]:
+        selected_count = st.selectbox("Question Count selector", options=count_options, index=1, key="quiz_count_selector")
+
+    filtered_questions = filter_quiz_questions(question_bank, selected_topic, selected_level)
+    if st.button("Start / Refresh Quiz"):
+        limit = _question_count_limit(selected_count, len(filtered_questions))
+        active_questions = filtered_questions[:limit]
+        st.session_state["quiz_active_question_ids"] = tuple(question.id for question in active_questions)
+        st.session_state["quiz_attempts"] = {}
+        st.session_state["quiz_topic_filter"] = selected_topic
+        st.session_state["quiz_level_filter"] = selected_level
+        st.session_state["quiz_question_count"] = selected_count
+        st.session_state["quiz_started"] = True
+        st.session_state.pop("quiz_dynamic_questions", None)
+        st.rerun()
+
+    reset_columns = st.columns(2)
+    with reset_columns[0]:
+        if st.button("Reset Current Quiz"):
+            _reset_current_quiz()
+            st.rerun()
+    with reset_columns[1]:
+        if st.button("Clear Quiz Progress"):
+            _clear_quiz_progress()
+            st.rerun()
+
+    _render_simulation_quiz_section()
+
+    if not st.session_state.get("quiz_started"):
+        st.caption("Choose filters and select Start / Refresh Quiz to begin.")
+        return
+
+    active_questions = _active_quiz_questions(question_bank)
+    if not active_questions:
+        st.warning("No questions are available for the selected filters.")
+        return
+
+    attempts = st.session_state.setdefault("quiz_attempts", {})
+    summary = summarize_quiz_attempts(attempts)
+    metric_columns = st.columns(4)
+    metric_columns[0].metric("Attempted", summary.attempted_count)
+    metric_columns[1].metric("Correct", summary.correct_count)
+    metric_columns[2].metric("Incorrect", summary.incorrect_count)
+    metric_columns[3].metric("Score", f"{summary.score_percent:.1f} %")
+    st.progress(summary.attempted_count / len(active_questions))
+
+    for index, question in enumerate(active_questions, start=1):
+        with st.container(border=True):
+            st.subheader(f"Question {index}")
+            st.caption(f"Topic: {question.topic} | Learning level: {question.level} | Source: {question.source_label}")
+            st.write(question.prompt)
+            with st.form(f"quiz_form_{question.id}"):
+                if question.question_type == "multiple_choice":
+                    labels = [choice.text for choice in question.choices]
+                    ids = [choice.id for choice in question.choices]
+                    selected_text = st.radio("Choose one answer", labels, key=f"quiz_answer_{question.id}")
+                    submitted_answer = ids[labels.index(selected_text)]
+                elif question.question_type == "numeric":
+                    submitted_answer = st.text_input("Enter numeric answer", key=f"quiz_answer_{question.id}")
+                    if question.units:
+                        st.caption(f"Units: {question.units}")
+                else:
+                    submitted_answer = st.radio("Choose one answer", ["True", "False"], key=f"quiz_answer_{question.id}")
+                submitted = st.form_submit_button("Submit Answer")
+            if submitted:
+                attempts[question.id] = evaluate_quiz_answer(question, submitted_answer)
+                st.session_state["quiz_attempts"] = attempts
+                st.rerun()
+            result = attempts.get(question.id)
+            if result is not None:
+                message = (
+                    f"{result.feedback}\n\nSubmitted answer: {result.submitted_answer}\n\n"
+                    f"Correct answer: {result.correct_answer_text}"
+                )
+                if result.is_correct:
+                    st.success(message)
+                else:
+                    st.warning(message)
+
+    summary = summarize_quiz_attempts(st.session_state.get("quiz_attempts", {}))
+    if summary.attempted_count == len(active_questions):
+        st.success("Quiz Complete")
+        st.write(f"Total questions: {len(active_questions)}")
+        st.write(f"Correct: {summary.correct_count}")
+        st.write(f"Incorrect: {summary.incorrect_count}")
+        st.write(f"Score percentage: {summary.score_percent:.1f} %")
+        if summary.score_percent >= 90.0:
+            st.write("Excellent understanding of the current model scope.")
+        elif summary.score_percent >= 70.0:
+            st.write("Good progress. Review the explanations for missed questions.")
+        else:
+            st.write("Continue practising with the deterministic explanations and simulations.")
+        st.caption("These are formative descriptors only.")
 
 def _get_openai_api_key() -> str | None:
     """Return the configured OpenAI API key without storing or displaying it."""
@@ -742,7 +954,7 @@ def render_sidebar() -> str:
         st.divider()
         page = st.radio(
             "Navigation",
-            options=["Home", "Lecture Notes", "Digital Twin", "AI Tutor"],
+            options=["Home", "Lecture Notes", "Digital Twin", "AI Tutor", "Quiz Lab"],
         )
         st.divider()
         st.caption("OpenAI Build Week Hackathon Prototype")
@@ -763,6 +975,7 @@ def main() -> None:
         "Lecture Notes": render_lecture_notes,
         "Digital Twin": render_digital_twin,
         "AI Tutor": render_ai_tutor,
+        "Quiz Lab": render_quiz,
     }
 
     selected_page = render_sidebar()
