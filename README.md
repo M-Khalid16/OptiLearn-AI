@@ -2,6 +2,29 @@
 
 **AI-Powered Educational Digital Twin for Optical Communication**
 
+`Educational Engineering Platform` · `Deterministic Python` · `Grounded OpenAI Assistance` · `Streamlit`
+
+OptiLearn AI is an interactive engineering-education platform that combines deterministic optical-communication simulations, grounded tutoring from lecture notes, formative quizzes, and scalar optical-fiber mode exploration in one Streamlit application. It responds to a modern learning challenge: information is abundant, but meaningful engineering understanding still requires active reasoning, visualization, experimentation, evidence interpretation, and reflection.
+
+Learn the equations, change the parameters, observe the physics, and test your understanding.
+
+## Why This Matters
+
+Students can now reach textbooks, videos, search engines, simulations, and AI-generated answers in seconds. That access is powerful, but it does not automatically create physical intuition or scientific judgement. Engineering learning still requires opportunities to test cause and effect, compare models, interpret evidence, and decide what a result can and cannot prove.
+
+OptiLearn AI is designed to support that active process. Deterministic simulations create opportunities to change parameters and observe consequences. Grounded AI connects locally prepared evidence with explanation. Strong foundations in optical links, wave propagation, loss, dispersion, and modes prepare learners for future study in photonics, quantum communication, integrated optics, sensing, advanced networks, and next-generation computing systems. Lifelong learning remains essential for future engineers and scientists.
+
+## Learning Outcomes the Platform Is Designed to Support
+
+OptiLearn AI is designed to support conceptual understanding, modelling fluency, visualization and interpretation, critical evaluation, scientific communication, confidence and curiosity, and lifelong-learning habits. Formal educational evaluation remains future work; the application creates structured opportunities to practise these skills rather than claiming guaranteed outcomes.
+
+## Why OptiLearn AI
+
+Optical-communication courses often move quickly from equations to abstract system diagrams. OptiLearn AI gives learners a single workspace where they can upload notes, ask grounded questions, run deterministic calculations, inspect assumptions, and practise with locally graded quizzes.
+
+## Live Demo
+
+
 `Final Build Week Prototype` · `Deterministic Python` · `Grounded OpenAI Assistance` · `Streamlit`
 
 OptiLearn AI is an interactive engineering-education platform that combines deterministic optical-communication simulations, grounded tutoring from lecture notes, formative quizzes, and scalar optical-fiber mode exploration in one Streamlit application.
@@ -13,6 +36,7 @@ Learn the equations, change the parameters, observe the physics, and test your u
 Optical-communication courses often move quickly from equations to abstract system diagrams. OptiLearn AI gives learners a single workspace where they can upload notes, ask grounded questions, run deterministic calculations, inspect assumptions, and practise with locally graded quizzes.
 
 ## Live Demo
+
 
 A live deployment URL can be added after deployment. The app runs locally with `streamlit run app.py` and can be deployed to Streamlit Community Cloud.
 
