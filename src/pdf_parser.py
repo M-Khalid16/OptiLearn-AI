@@ -122,7 +122,7 @@ def _build_page(page_number: int, text: str) -> PDFPage:
 def _build_full_text(pages: tuple[PDFPage, ...]) -> str:
     """Join pages with visible one-based provenance separators."""
     return "\n\n".join(
-        f"===== Page {page.page_number} =====\n\n{page.text}" for page in pages
+        f"Page {page.page_number}\n\n{page.text}" for page in pages
     )
 
 

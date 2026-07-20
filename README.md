@@ -1,136 +1,70 @@
 # OptiLearn AI
 
-**AI-Powered Educational Digital Twin for Optical Communication**
+**Version 1.0.0 — AI-Powered Educational Digital Twin for Optical Communication**
 
-`Educational Engineering Platform` · `Deterministic Python` · `Grounded OpenAI Assistance` · `Streamlit`
+## Overview
 
-OptiLearn AI is an interactive engineering-education platform that combines deterministic optical-communication simulations, grounded tutoring from lecture notes, formative quizzes, and scalar optical-fiber mode exploration in one Streamlit application. It responds to a modern learning challenge: information is abundant, but meaningful engineering understanding still requires active reasoning, visualization, experimentation, evidence interpretation, and reflection.
-
-Learn the equations, change the parameters, observe the physics, and test your understanding.
+OptiLearn AI is a Streamlit learning workspace for optical communication. It combines deterministic Python simulations, locally graded formative quizzes, optical-fiber mode visualization, PDF lecture-note preparation, and OpenAI-assisted grounded explanations when API access is configured.
 
 ## Why This Matters
 
-Students can now reach textbooks, videos, search engines, simulations, and AI-generated answers in seconds. That access is powerful, but it does not automatically create physical intuition or scientific judgement. Engineering learning still requires opportunities to test cause and effect, compare models, interpret evidence, and decide what a result can and cannot prove.
-
-OptiLearn AI is designed to support that active process. Deterministic simulations create opportunities to change parameters and observe consequences. Grounded AI connects locally prepared evidence with explanation. Strong foundations in optical links, wave propagation, loss, dispersion, and modes prepare learners for future study in photonics, quantum communication, integrated optics, sensing, advanced networks, and next-generation computing systems. Lifelong learning remains essential for future engineers and scientists.
-
-## Learning Outcomes the Platform Is Designed to Support
-
-OptiLearn AI is designed to support conceptual understanding, modelling fluency, visualization and interpretation, critical evaluation, scientific communication, confidence and curiosity, and lifelong-learning habits. Formal educational evaluation remains future work; the application creates structured opportunities to practise these skills rather than claiming guaranteed outcomes.
-
-## Why OptiLearn AI
-
-Optical-communication courses often move quickly from equations to abstract system diagrams. OptiLearn AI gives learners a single workspace where they can upload notes, ask grounded questions, run deterministic calculations, inspect assumptions, and practise with locally graded quizzes.
+Students can access more information than ever, but access alone does not create deep engineering understanding. OptiLearn AI is designed to help learners practise reasoning: inspect assumptions, change parameters, interpret plots, compare evidence, and ask grounded questions.
 
 ## Live Demo
 
-
-
-
-
-`Final Build Week Prototype` · `Deterministic Python` · `Grounded OpenAI Assistance` · `Streamlit`
-
-OptiLearn AI is an interactive engineering-education platform that combines deterministic optical-communication simulations, grounded tutoring from lecture notes, formative quizzes, and scalar optical-fiber mode exploration in one Streamlit application.
-
-Learn the equations, change the parameters, observe the physics, and test your understanding.
-
-## Why OptiLearn AI
-
-Optical-communication courses often move quickly from equations to abstract system diagrams. OptiLearn AI gives learners a single workspace where they can upload notes, ask grounded questions, run deterministic calculations, inspect assumptions, and practise with locally graded quizzes.
-
-## Live Demo
-
-
-
-
-A live deployment URL can be added after deployment. The app runs locally with `streamlit run app.py` and can be deployed to Streamlit Community Cloud.
+No deployment URL is included in this repository. Run the app locally or deploy it to Streamlit Community Cloud using the instructions below.
 
 ## Core Features
 
-- PDF lecture-note extraction with page-level provenance.
-- Grounded AI Tutor for answers from retrieved lecture-note passages. **Requires OpenAI API access for live answers.**
-- Fiber attenuation simulation.
-- Chromatic dispersion demonstration.
-- Free-Space Optical (FSO) link budget.
-- AI explanation of deterministic simulation results. **Requires OpenAI API access for live explanations.**
-- Deterministic Quiz Lab with local grading.
-- LP-mode explorer for weak-guidance scalar modes.
-- Gaussian launch coupling visualization.
-- Meridional rays and skew rays.
-- Transparent demo mode for labelled local AI-feature demonstrations when API access is unavailable.
+- Lecture-note PDF extraction with page-level provenance.
+- Fiber attenuation and received-power exploration.
+- Chromatic-dispersion broadening visualization.
+- Free-space optical link budget with beam spreading, collection, pointing, and atmospheric loss.
+- Grounded AI Tutor using retrieved lecture-note passages when OpenAI API access is available.
+- Quiz Lab with deterministic, locally graded formative questions.
+- Mode Explorer for scalar LP modes, Gaussian launch coupling, meridional rays, and skew rays.
 
-## Learning Journey
+## Learning Experience
 
-1. Upload text-based optical-communication lecture notes.
-2. Ask grounded questions with cited pages.
-3. Explore deterministic fiber and FSO simulations.
-4. Practise with Quiz Lab.
-5. Investigate scalar LP modes, Gaussian launch coupling, meridional rays, and skew rays.
+OptiLearn AI supports a progression from reading, to questioning, to modelling, to visualization, to reflection, to assessment, and to deeper investigation.
+
+## Learning Outcomes the Platform Is Designed to Support
+
+The platform is designed to support conceptual understanding, visual intuition, practical modelling skills, critical judgement, scientific curiosity, confidence, and lifelong-learning habits. It does not claim measured educational outcomes or replace formal assessment.
 
 ## Scientific Models
 
-Fiber attenuation:
-
-```text
-A = alpha L
-T = 10^(-A/10)
-P_rx = P_tx T
-```
-
-Chromatic dispersion:
-
-```text
-Delta t = |D| Delta lambda L
-```
-
-FSO link budget:
-
-```text
-w_rx = w_0 + theta L
-eta_geo = 1 - exp(-2a_rx^2/w_rx^2)
-eta_point = exp(-2r_offset^2/w_rx^2)
-```
-
-LP modes:
-
-```text
-V = (2pi a/lambda) sqrt(n_1^2-n_2^2)
-u^2 + w^2 = V^2
-```
-
-These models are educational approximations exposed on the Digital Twin and Mode Explorer pages.
+The app includes deterministic educational approximations for fiber attenuation, chromatic dispersion, FSO link budgets, scalar weak-guidance LP modes, Gaussian launch coupling, and idealized ray tracing. Model assumptions and exclusions are shown in the interface.
 
 ## Architecture
 
-```mermaid
-flowchart TD
-  User[User] --> UI[Streamlit UI]
-  UI --> Models[Deterministic Python Models]
-  Models --> Plots[Plotly Visualizations]
-  User --> Notes[Lecture Notes]
-  Notes --> Parser[PDF Parser]
-  Parser --> Retrieval[Retrieval]
-  Retrieval --> Tutor[OpenAI Grounded Tutor]
-  Models --> Evidence[Evidence Builder]
-  Evidence --> Explain[OpenAI Explanation]
-```
+- `app.py`: Streamlit application shell and page orchestration.
+- `src/optical_simulator.py`: fiber attenuation and dispersion calculations.
+- `src/fso_simulator.py`: free-space optical link calculations.
+- `src/lp_mode_solver.py`: scalar LP-mode calculations and coupling.
+- `src/ray_tracer.py`: meridional and skew ray tracing.
+- `src/quiz_engine.py`: deterministic formative quiz bank and grading.
+- `src/pdf_parser.py`: PDF text extraction.
+- `src/ai_tutor.py` and `src/simulation_explainer.py`: OpenAI-assisted grounded explanations.
+- `src/visualizations.py`: Plotly figures.
+- `src/ui_components.py`: reusable Streamlit UI polish.
 
 ## Deterministic Python versus OpenAI
 
-Deterministic Python calculates scientific results, validates inputs, produces simulations, grades quizzes, solves scalar LP modes, and traces rays. OpenAI explains supplied deterministic results and answers from retrieved lecture-note evidence. OpenAI does not replace the calculators and does not modify deterministic outputs.
+Deterministic simulations do not require OpenAI. Quiz Lab does not require OpenAI. Mode Explorer does not require OpenAI. Live tutoring and live simulation explanations require OpenAI API access. ChatGPT Plus does not include API billing.
 
 ## Application Pages
 
-- **Home**: project positioning, learning journey, and routes into key workflows.
-- **Lecture Notes**: PDF extraction and study readiness.
-- **Digital Twin**: fiber attenuation, chromatic dispersion, and FSO link budgets.
-- **AI Tutor**: grounded answers from active lecture notes.
-- **Quiz Lab**: deterministic formative quizzes.
-- **Mode Explorer**: scalar LP modes, coupling, and ray propagation.
+- Home
+- Lecture Notes
+- Digital Twin
+- AI Tutor
+- Quiz Lab
+- Mode Explorer
 
 ## Installation
 
-Windows PowerShell:
+### Windows
 
 ```powershell
 git clone <repository-url>
@@ -142,7 +76,7 @@ python -m pip install -r requirements.txt
 streamlit run app.py
 ```
 
-macOS/Linux:
+### macOS/Linux
 
 ```bash
 git clone <repository-url>
@@ -156,108 +90,56 @@ streamlit run app.py
 
 ## Configuration
 
-Optional environment variables:
+Optional environment variables or Streamlit secrets:
 
-- `OPENAI_API_KEY`: enables live AI Tutor answers and live simulation explanations.
-- `OPENAI_MODEL`: defaults to `gpt-5-mini` when unset.
-- `OPTILEARN_DEMO_MODE`: enable with `1`, `true`, `yes`, or `on` for clearly labelled local demo templates.
-
-Deterministic simulations, Quiz Lab, and Mode Explorer do not require OpenAI. ChatGPT Plus does not include OpenAI API billing.
+- `OPENAI_API_KEY`: enables live AI tutoring and explanations.
+- `OPENAI_MODEL`: selects the OpenAI model for live responses.
+- `OPTILEARN_DEMO_MODE`: local demo mode; enabled by `1`, `true`, `yes`, or `on`.
 
 ## Local Development
 
 ```bash
 python -m py_compile app.py src/*.py
+python -m tabnanny app.py
 streamlit run app.py
 ```
 
 ## Streamlit Community Cloud Deployment
 
-Add secrets in Streamlit Cloud only when live AI features are needed:
-
-```toml
-OPENAI_API_KEY = "..."
-OPENAI_MODEL = "gpt-5-mini"
-OPTILEARN_DEMO_MODE = "true"
-```
-
-Demo mode is optional and is clearly labelled as local, non-live AI output.
-
-## Usage Examples
-
-- Use `10110010`, `10 Gbit/s`, `1 mW`, `20 km`, and `0.2 dB/km` for a fiber-loss demo.
-- Use `D = 17 ps/(nm·km)`, `0.1 nm`, and `20 km` for a dispersion demo.
-- Use `1 km`, `10 mW`, `2 cm`, `1 mrad`, `20 cm`, `1 dB/km`, and zero pointing offset for an FSO demo.
+Create a Streamlit Community Cloud app pointed at this repository, set `app.py` as the entry point, and add `OPENAI_API_KEY` and `OPENAI_MODEL` only if live AI features should be enabled.
 
 ## Demo Workflow
 
-See [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for a 3-to-5-minute hackathon walkthrough.
+Start on Home, run fiber attenuation, switch to chromatic dispersion, review FSO, explore LP modes and rays, answer Quiz Lab questions, then use the Grounded AI Tutor with a text-based PDF.
 
 ## Testing and Validation
 
-Primary syntax check:
-
-```bash
-python -m py_compile app.py src/*.py
-```
-
-The codebase also supports deterministic regression checks for fiber attenuation, chromatic dispersion, FSO, Quiz Lab, LP modes, Gaussian coupling, meridional rays, and skew rays. Streamlit AppTest can be used for page-rendering and navigation regressions. This README does not claim continuous integration unless a CI workflow is added.
+Recommended checks include Python compilation, tabnanny, conflict-marker scans, Streamlit AppTest page rendering, scientific regression checks for deterministic calculators, and Streamlit startup validation.
 
 ## Privacy and Security
 
-- API keys are read from environment variables or Streamlit secrets and are not displayed.
-- Uploaded PDF text remains session based and is not written to the repository.
-- Quiz answers are graded locally.
-- Mode and ray arrays are not sent to OpenAI.
-- No telemetry, third-party tracking, learner accounts, or persistent analytics are added.
+Uploaded PDFs are processed for the current Streamlit session. The app does not implement accounts, persistent learner profiles, telemetry, analytics, or databases. Do not commit API keys.
 
 ## Scientific Scope and Limitations
 
-- No OCR.
-- No BER/SNR/OSNR calculation.
-- No photodetection model.
-- No experimental-grade receiver model.
-- No turbulence or scintillation.
-- No full-vector optical modes.
-- No FEM/BPM/FDTD.
-- No persistent learner accounts.
-- No long-term PDF storage.
-- No professional certification.
+OptiLearn AI is educational software. It does not provide experimental-grade BER, SNR, turbulence, receiver, nonlinear, full-vector electromagnetic, FEM, BPM, or FDTD modelling.
 
 ## Repository Structure
 
-```text
-.
-├── DEMO_SCRIPT.md
-├── README.md
-├── SUBMISSION.md
-├── app.py
-├── requirements.txt
-└── src
-    ├── ai_tutor.py
-    ├── fso_simulator.py
-    ├── lp_mode_solver.py
-    ├── optical_simulator.py
-    ├── pdf_parser.py
-    ├── quiz_engine.py
-    ├── ray_tracer.py
-    ├── simulation_explainer.py
-    ├── ui_components.py
-    └── visualizations.py
-```
+See the Architecture section for the main code layout. Documentation includes `README.md`, `DEMO_SCRIPT.md`, and `SUBMISSION.md`.
 
 ## Future Extensions
 
-Potential future work includes OCR, receiver-noise education modules, eye-diagram approximations, turbulence demonstrations, richer assessment analytics, and full-vector or BPM-style mode solvers. These are intentionally outside the final polish milestone.
+Possible future work includes richer laboratory workflows, broader validated question banks, additional visual comparisons, and advanced models clearly separated from the current educational approximations.
 
 ## Hackathon Submission
 
-See [SUBMISSION.md](SUBMISSION.md) for suggested Devpost copy, summaries, tags, privacy notes, limitations, and demo-video positioning.
+This repository includes submission-ready documentation while keeping hackathon references out of the user-facing app copy.
 
 ## Author
 
-Built as OptiLearn AI for OpenAI Build Week.
+M-Khalid16
 
 ## License
 
-MIT
+Add or update a repository license file before public release if one is not already present.

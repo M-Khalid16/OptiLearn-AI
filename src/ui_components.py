@@ -6,72 +6,66 @@ import streamlit as st
 
 _TONES = {
     "neutral": "badge-neutral",
+    "information": "badge-info",
     "success": "badge-success",
     "warning": "badge-warning",
-    "information": "badge-info",
 }
-
-
-def inject_global_styles() -> None:
-    """Inject the small scoped visual system used by the app."""
-    st.markdown(
-        """
-<style>
-
-:root { --optilearn-navy:#0f2742; --optilearn-cyan:#0891b2; --optilearn-violet:#6d5bd0; }
-html, body, [class*="css"] { font-family: "Aptos", "Segoe UI", Arial, sans-serif; }
-.optilearn-hero, .optilearn-card, .optilearn-notice, .optilearn-next, .optilearn-footer, .optilearn-panel {
-  border: 1px solid rgba(8, 145, 178, 0.22); border-radius: .9rem; padding: .95rem 1rem;
-  background: linear-gradient(135deg, rgba(15, 39, 66, 0.06), rgba(109, 91, 208, 0.06));
-}
-.optilearn-hero { position: relative; padding: 1.35rem 1.45rem; overflow: hidden; }
-.optilearn-hero::after { content:""; position:absolute; inset:0; pointer-events:none; background: radial-gradient(circle at 88% 18%, rgba(8,145,178,.16), transparent 26%), repeating-linear-gradient(168deg, transparent 0 22px, rgba(8,145,178,.06) 23px, transparent 24px); }
-.optilearn-product { color: var(--optilearn-navy); font-size: clamp(2.2rem, 4vw, 2.6rem); font-weight: 750; margin-bottom: .15rem; }
-.optilearn-tagline { font-size: 1.08rem; color: inherit; opacity: .86; margin-bottom: 1rem; }
-.optilearn-hero-statement { font-family: "Book Antiqua", "Palatino Linotype", Palatino, Georgia, serif; font-size: clamp(1.55rem, 3vw, 2.08rem); line-height: 1.25; font-weight: 500; max-width: 58rem; margin: .5rem 0 .75rem 0; }
-.optilearn-prose { font-size: 1.08rem; line-height: 1.62; max-width: 66rem; }
-.optilearn-eyebrow { color: var(--optilearn-cyan); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: .78rem; }
-.optilearn-card { min-height: 7.6rem; margin-bottom: .7rem; }
-.optilearn-card h3 { margin: .1rem 0 .32rem 0; font-size: 1.08rem; }
-.optilearn-card p { margin-bottom: 0; line-height: 1.48; }
-.optilearn-badge { display:inline-block; border-radius:999px; padding:.16rem .5rem; font-size:.76rem; font-weight:700; margin:.08rem .18rem .3rem 0; border:1px solid currentColor; }
-.badge-neutral { color:#475569; background:rgba(100,116,139,.10); }
-.badge-success { color:#078a58; background:rgba(16,185,129,.12); }
-.badge-warning { color:#b45309; background:rgba(245,158,11,.14); }
-.badge-info { color:#0869a1; background:rgba(14,165,233,.12); }
-.optilearn-next { border-left: .28rem solid var(--optilearn-violet); }
-.optilearn-footer { font-size:.9rem; color:inherit; opacity:.88; margin-top:2rem; }
-@media (max-width: 760px) { .optilearn-card { min-height: auto; } .optilearn-hero { padding: 1rem; } .optilearn-prose { font-size: 1rem; } }
-
-
-.optilearn-hero, .optilearn-card, .optilearn-notice, .optilearn-next, .optilearn-footer {
-  border: 1px solid rgba(0, 188, 212, 0.24); border-radius: 1rem; padding: 1rem 1.1rem;
-  background: linear-gradient(135deg, rgba(6, 32, 64, 0.06), rgba(124, 58, 237, 0.05));
-}
-.optilearn-hero { padding: 1.35rem; border-left: 0.35rem solid #00bcd4; }
-.optilearn-eyebrow { color: #0891b2; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: .8rem; }
-.optilearn-card { min-height: 10.5rem; margin-bottom: .75rem; }
-.optilearn-card h3 { margin: .25rem 0 .35rem 0; }
-.optilearn-badge { display:inline-block; border-radius:999px; padding:.18rem .55rem; font-size:.78rem; font-weight:700; margin:.1rem .2rem .35rem 0; border:1px solid currentColor; }
-.badge-neutral { color:#475569; background:rgba(100,116,139,.10); }
-.badge-success { color:#047857; background:rgba(16,185,129,.12); }
-.badge-warning { color:#b45309; background:rgba(245,158,11,.14); }
-.badge-info { color:#0369a1; background:rgba(14,165,233,.12); }
-.optilearn-step-number { font-weight:800; color:#7c3aed; }
-.optilearn-next { border-left: .35rem solid #7c3aed; }
-.optilearn-footer { font-size:.9rem; color:inherit; opacity:.88; margin-top:2rem; }
-@media (max-width: 760px) { .optilearn-card { min-height: auto; } .optilearn-hero { padding: 1rem; } }
-
-
-
-</style>
-""",
-        unsafe_allow_html=True,
-    )
 
 
 def _e(text: str) -> str:
     return html.escape(str(text))
+
+
+def inject_global_styles() -> None:
+    """Inject the scoped OptiLearn visual system."""
+    st.markdown(
+        """
+<style>
+:root {
+  --optilearn-navy: #0f2742;
+  --optilearn-cyan: #0891b2;
+  --optilearn-violet: #6d5bd0;
+  --optilearn-border: rgba(8, 145, 178, 0.24);
+}
+html, body, [data-testid="stAppViewContainer"] {
+  font-family: "Aptos", "Segoe UI", Arial, sans-serif;
+}
+.optilearn-hero,
+.optilearn-card,
+.optilearn-notice,
+.optilearn-next,
+.optilearn-footer,
+.optilearn-panel {
+  border: 1px solid var(--optilearn-border);
+  border-radius: 0.95rem;
+  padding: 1rem 1.1rem;
+  background: linear-gradient(135deg, rgba(15, 39, 66, 0.055), rgba(109, 91, 208, 0.045));
+}
+.optilearn-hero { padding: 1.35rem 1.45rem; }
+.optilearn-product { color: var(--optilearn-navy); font-size: clamp(2.05rem, 4vw, 2.55rem); font-weight: 760; margin-bottom: .2rem; }
+.optilearn-tagline { font-size: 1.08rem; opacity: .86; margin-bottom: 1rem; }
+.optilearn-hero-statement { font-family: "Book Antiqua", "Palatino Linotype", Palatino, Georgia, serif; font-size: clamp(1.55rem, 3vw, 2.1rem); line-height: 1.26; font-weight: 500; max-width: 58rem; margin: .5rem 0 .8rem; }
+.optilearn-prose { font-size: 1.05rem; line-height: 1.6; max-width: 66rem; }
+.optilearn-eyebrow { color: var(--optilearn-cyan); font-weight: 750; letter-spacing: .08em; text-transform: uppercase; font-size: .78rem; }
+.optilearn-card { min-height: 7.6rem; margin-bottom: .75rem; }
+.optilearn-card h3 { margin: .1rem 0 .35rem; font-size: 1.08rem; }
+.optilearn-card p { margin-bottom: 0; line-height: 1.48; }
+.optilearn-badge { display: inline-block; border-radius: 999px; padding: .16rem .55rem; font-size: .76rem; font-weight: 700; margin: .08rem .18rem .35rem 0; border: 1px solid currentColor; }
+.badge-neutral { color: #475569; background: rgba(100,116,139,.10); }
+.badge-info { color: #0869a1; background: rgba(14,165,233,.12); }
+.badge-success { color: #078a58; background: rgba(16,185,129,.12); }
+.badge-warning { color: #b45309; background: rgba(245,158,11,.14); }
+.optilearn-next { border-left: .28rem solid var(--optilearn-violet); margin-top: 1rem; }
+.optilearn-footer { font-size: .9rem; opacity: .88; margin-top: 2rem; }
+@media (max-width: 760px) {
+  .optilearn-card { min-height: auto; }
+  .optilearn-hero { padding: 1rem; }
+  .optilearn-prose { font-size: 1rem; }
+}
+</style>
+""",
+        unsafe_allow_html=True,
+    )
 
 
 def render_status_badge(text: str, tone: str) -> None:
@@ -93,58 +87,29 @@ def render_page_header(title: str, subtitle: str, eyebrow: str | None = None, ba
 
 def render_scope_notice(supported: str, excluded: str) -> None:
     """Render a concise model-scope notice."""
-    st.markdown(
-        f'<div class="optilearn-notice"><strong>Supported:</strong> {_e(supported)}<br><strong>Not included:</strong> {_e(excluded)}</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown(f'<div class="optilearn-notice"><strong>Supported:</strong> {_e(supported)}<br><strong>Not included:</strong> {_e(excluded)}</div>', unsafe_allow_html=True)
 
 
-def render_feature_card(icon: str, title: str, body: str, badge: str | None = None) -> None:
-    """Render one feature card."""
+def render_feature_card(title: str, body: str, badge: str | None = None) -> None:
+    """Render one professional feature card without icons."""
     badge_html = f'<span class="optilearn-badge badge-neutral">{_e(badge)}</span>' if badge else ""
-    st.markdown(f'<div class="optilearn-card"><div>{_e(icon)}</div>{badge_html}<h3>{_e(title)}</h3><p>{_e(body)}</p></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="optilearn-card">{badge_html}<h3>{_e(title)}</h3><p>{_e(body)}</p></div>', unsafe_allow_html=True)
 
 
-def render_learning_step(number: int, title: str, body: str) -> None:
-
-
-
-    """Render one learning journey step. The number is accepted for API stability but not displayed."""
+def render_learning_stage(title: str, body: str) -> None:
+    """Render one unnumbered learning stage."""
     st.markdown(f'<div class="optilearn-card"><h3>{_e(title)}</h3><p>{_e(body)}</p></div>', unsafe_allow_html=True)
-
-
-
-
-    """Render one learning journey step. The number is accepted for API stability but not displayed."""
-    st.markdown(f'<div class="optilearn-card"><h3>{_e(title)}</h3><p>{_e(body)}</p></div>', unsafe_allow_html=True)
-
-    """Render one learning journey step."""
-    st.markdown(f'<div class="optilearn-card"><span class="optilearn-step-number">{number:02d}</span><h3>{_e(title)}</h3><p>{_e(body)}</p></div>', unsafe_allow_html=True)
-
-
-
 
 
 def render_scientific_trust_panel() -> None:
     """Render the shared scientific trust panel."""
     st.markdown(
-        """
-<div class="optilearn-notice"><strong>Built for Scientific Transparency</strong><br>
-
-
-
-<strong>Deterministic First:</strong> Python calculates scientific values and validates inputs.<br>
-<strong>Evidence Before Explanation:</strong> AI receives locally prepared simulation evidence or retrieved lecture-note passages.<br>
-<strong>Assumptions Made Visible:</strong> Every model states what is included and excluded.<br>
-<strong>No Invented Performance Claims:</strong> Unsupported BER, SNR, receiver, turbulence, or full-vector results are not fabricated.<br>
-<strong>Learning with Boundaries:</strong> Educational approximations are clearly distinguished from experimental-grade modelling.</div>
-
-
-
-Deterministic calculations stay in Python, equations and assumptions are shown, unsupported quantities are not invented, and AI explanations are separated from simulation calculations. Uploaded lecture notes remain session based, and current models are educational approximations.</div>
-
-
-""",
+        '<div class="optilearn-notice"><strong>Built for Scientific Transparency</strong><br>'
+        '<strong>Deterministic First:</strong> Python calculates scientific values and validates inputs.<br>'
+        '<strong>Evidence Before Explanation:</strong> AI receives locally prepared simulation evidence or retrieved lecture-note passages.<br>'
+        '<strong>Assumptions Made Visible:</strong> Every model states what is included and excluded.<br>'
+        '<strong>No Invented Performance Claims:</strong> Unsupported BER, SNR, receiver, turbulence, or full-vector results are not fabricated.<br>'
+        '<strong>Learning with Boundaries:</strong> Educational approximations are clearly distinguished from experimental-grade modelling.</div>',
         unsafe_allow_html=True,
     )
 
