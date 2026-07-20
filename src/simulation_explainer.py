@@ -26,6 +26,7 @@ _UNSUPPORTED_CAPABILITY_MESSAGE = (
 class SimulationEvidence:
     """Scalar evidence extracted from a deterministic fiber simulation result."""
 
+    simulation_mode: str
     bit_sequence: str
     bit_count: int
     bit_rate_gbps: float
@@ -38,6 +39,12 @@ class SimulationEvidence:
     linear_attenuation_factor: float
     remaining_power_percent: float
     samples_per_bit: int
+    dispersion_coefficient_ps_nm_km: float = 0.0
+    spectral_width_nm: float = 0.0
+    temporal_broadening_ps: float = 0.0
+    temporal_broadening_ns: float = 0.0
+    broadening_ratio: float = 0.0
+    dispersion_regime: str = "Small"
 
 
 @dataclass(frozen=True)
@@ -74,6 +81,11 @@ def build_simulation_evidence(result: FiberSimulationResult) -> SimulationEviden
         "linear_attenuation_factor": result.linear_attenuation_factor,
         "remaining_power_percent": result.remaining_power_percent,
         "samples_per_bit": result.samples_per_bit,
+        "dispersion_coefficient_ps_nm_km": result.dispersion_coefficient_ps_nm_km,
+        "spectral_width_nm": result.spectral_width_nm,
+        "temporal_broadening_ps": result.temporal_broadening_ps,
+        "temporal_broadening_ns": result.temporal_broadening_ns,
+        "broadening_ratio": result.broadening_ratio,
     }
     for name, value in scalar_values.items():
         _require_finite_scalar(value, name)
@@ -81,6 +93,11 @@ def build_simulation_evidence(result: FiberSimulationResult) -> SimulationEviden
         raise ValueError("samples_per_bit must be an integer scalar value.")
 
     return SimulationEvidence(
+        simulation_mode=(
+            "Attenuation + Chromatic Dispersion"
+            if result.dispersion_enabled
+            else "Attenuation Only"
+        ),
         bit_sequence="".join(str(bit) for bit in bits),
         bit_count=len(bits),
         bit_rate_gbps=result.bit_rate_gbps,
@@ -93,6 +110,12 @@ def build_simulation_evidence(result: FiberSimulationResult) -> SimulationEviden
         linear_attenuation_factor=result.linear_attenuation_factor,
         remaining_power_percent=result.remaining_power_percent,
         samples_per_bit=result.samples_per_bit,
+        dispersion_coefficient_ps_nm_km=result.dispersion_coefficient_ps_nm_km,
+        spectral_width_nm=result.spectral_width_nm,
+        temporal_broadening_ps=result.temporal_broadening_ps,
+        temporal_broadening_ns=result.temporal_broadening_ns,
+        broadening_ratio=result.broadening_ratio,
+        dispersion_regime=result.dispersion_regime,
     )
 
 
@@ -101,12 +124,15 @@ def format_simulation_evidence(evidence: SimulationEvidence) -> str:
     return "\n".join(
         [
             "SIMULATION INPUTS",
+            f"Simulation mode: {evidence.simulation_mode}",
             f"Bit sequence: {evidence.bit_sequence}",
             f"Bit count: {evidence.bit_count}",
             f"Bit rate: {evidence.bit_rate_gbps:.12g} Gbit/s",
             f"Transmitted optical power: {evidence.transmitted_power_mw:.12g} mW",
             f"Fiber length: {evidence.fiber_length_km:.12g} km",
             f"Attenuation coefficient: {evidence.attenuation_db_per_km:.12g} dB/km",
+            f"Chromatic dispersion coefficient: {evidence.dispersion_coefficient_ps_nm_km:.12g} ps/(nm·km)",
+            f"Source spectral width: {evidence.spectral_width_nm:.12g} nm",
             "",
             "DETERMINISTIC PYTHON RESULTS",
             f"Bit duration: {evidence.bit_duration_ns:.12g} ns",
@@ -115,18 +141,23 @@ def format_simulation_evidence(evidence: SimulationEvidence) -> str:
             f"Received optical power: {evidence.received_power_mw:.12g} mW",
             f"Remaining optical power: {evidence.remaining_power_percent:.12g}%",
             f"Samples per bit: {evidence.samples_per_bit}",
+            f"Temporal broadening: {evidence.temporal_broadening_ps:.12g} ps",
+            f"Temporal broadening: {evidence.temporal_broadening_ns:.12g} ns",
+            f"Broadening ratio: {evidence.broadening_ratio:.12g}",
+            f"Dispersion regime: {evidence.dispersion_regime}",
             "",
             "MODEL SCOPE",
             "- Ideal NRZ/OOK transmitter",
             "- Logical zero has zero optical power",
             "- Constant attenuation coefficient",
-            "- Attenuation only",
-            "- Pulse amplitude changes",
-            "- Pulse shape is preserved",
+            f"- Mode: {evidence.simulation_mode}",
+            "- Pulse amplitude changes due to attenuation",
+            "- Dispersion mode uses Gaussian convolution for educational temporal spreading only",
             "- No connector or splice loss",
-            "- No dispersion",
+            "- Chromatic dispersion included only when simulation mode says Attenuation + Chromatic Dispersion",
             "- No optical or electrical noise",
             "- No receiver model",
+            "- No waveform arrays sent to OpenAI",
             "- No BER calculation",
             "- No nonlinear effects",
         ]
@@ -141,10 +172,10 @@ def build_simulation_explanation_instructions(level: str) -> str:
         "Foundation": (
             "Explain the physical meaning intuitively. Define attenuation and optical power. "
             "Explain what logical ones and zeros represent. Avoid unnecessary mathematics. "
-            "Remain scientifically accurate. Explicitly state that amplitude changes but pulse shape does not change in this model."
+            "Remain scientifically accurate. For attenuation-only mode, state that amplitude changes but pulse shape does not change; for dispersion mode, explain pulse broadening intuitively."
         ),
         "Engineering": (
-            "Explain the equations A = alpha L, T = 10^(-A/10), P_rx = P_tx T, and T_b = 1/R_b. "
+            "Explain the equations A = alpha L, T = 10^(-A/10), P_rx = P_tx T, T_b = 1/R_b, and when present Delta_t = |D| Delta_lambda L. "
             "Define each variable and unit. Explain cause-and-effect relationships, distinguish dB and linear power, "
             "explain why bit rate changes the time scale but not attenuation in this simplified model, and distinguish inputs, calculated results, and assumptions."
         ),
@@ -155,10 +186,10 @@ def build_simulation_explanation_instructions(level: str) -> str:
         ),
     }
     return (
-        "You are explaining one deterministic optical-fiber attenuation simulation for OptiLearn AI. "
+        "You are explaining one deterministic optical-fiber simulation for OptiLearn AI. "
         "The supplied simulation evidence is authoritative. All numerical values were calculated in Python. "
         "Do not recalculate, alter, round inconsistently, or contradict those values. Do not invent parameters. "
-        "Do not invent equations beyond the specified attenuation model. Do not claim dispersion, noise, detection, BER, nonlinearities, or free-space optical effects were simulated. "
+        "Do not invent equations beyond the supplied attenuation and, when present, chromatic-dispersion evidence. You may discuss chromatic dispersion only when the evidence simulation mode includes it. Do not claim noise, receiver modelling, BER, nonlinearities, PMD, eye diagrams, or free-space optical effects were simulated. Distinguish attenuation amplitude loss from dispersion temporal spreading. "
         "Do not claim experimental validation occurred. Distinguish simulation facts from educational interpretation. "
         "Explain only the supplied simulation. Do not use web knowledge. Do not request tools. Do not mention lecture-note grounding. "
         "Do not imply that the AI controlled the simulation. Recommended structure: 1. Direct Interpretation 2. What the Python Simulation Calculated 3. Physical Meaning 4. Assumptions and Limitations. "
@@ -233,11 +264,14 @@ def validate_simulation_explanation(explanation_text: str, evidence: SimulationE
     if not isinstance(explanation_text, str) or not explanation_text.strip():
         raise RuntimeError("The OpenAI response did not contain a simulation explanation.")
 
+    dispersion_allowed = evidence.simulation_mode == "Attenuation + Chromatic Dispersion"
     for clause in _split_capability_clauses(explanation_text):
-        for capability_pattern in _CAPABILITY_PATTERNS.values():
+        for capability_name, capability_pattern in _CAPABILITY_PATTERNS.items():
             if not _contains_capability(clause, capability_pattern):
                 continue
             if _is_limitation_for_capability(clause, capability_pattern):
+                continue
+            if capability_name == "dispersion" and dispersion_allowed:
                 continue
             if _is_affirmative_capability_claim(clause, capability_pattern):
                 raise RuntimeError(_UNSUPPORTED_CAPABILITY_MESSAGE)
