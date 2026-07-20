@@ -15,12 +15,17 @@ from src.ai_tutor import (
 )
 from src.pdf_parser import PDFDocument, extract_pdf_document
 
+from src.fso_simulator import (
+    build_fso_educational_observations,
+    simulate_fso_link,
+)
 from src.optical_simulator import (
     build_educational_observations,
     simulate_fiber_attenuation,
     simulate_fiber_dispersion,
 )
 from src.simulation_explainer import (
+    build_fso_simulation_evidence,
     build_simulation_evidence,
     format_simulation_evidence,
     generate_simulation_explanation,
@@ -28,6 +33,8 @@ from src.simulation_explainer import (
 )
 from src.visualizations import (
     create_dispersion_comparison_figure,
+    create_fso_beam_profile_figure,
+    create_fso_power_budget_figure,
     create_signal_comparison_figure,
 )
 
@@ -95,8 +102,9 @@ def render_home() -> None:
 
     st.info(
         "This Build Week prototype is under active development. The Digital Twin "
-        "now supports deterministic fiber attenuation, educational chromatic-"
-        "dispersion pulse broadening, and AI explanation when API access is configured."
+        "now includes deterministic optical-fiber attenuation, educational "
+        "chromatic dispersion, deterministic free-space optical link budgeting, "
+        "and AI explanations when API access is configured."
     )
 
 
@@ -296,275 +304,213 @@ def render_digital_twin() -> None:
     """Render the educational Digital Twin page."""
     st.title("Educational Digital Twin")
     st.write(
-        "This is the first validated layer of the OptiLearn AI digital twin. "
-        "It demonstrates binary NRZ/OOK transmission through a simplified "
-        "optical-fiber model with selectable attenuation-only and chromatic-dispersion modes."
+        "This validated OptiLearn AI digital twin demonstrates deterministic "
+        "optical-fiber modelling and educational free-space optical link budgeting."
     )
     st.info(
-        "This deterministic model can include fiber attenuation and an educational "
-        "chromatic-dispersion pulse-broadening approximation. It does not include "
-        "noise, photodetection, receiver filtering, nonlinearities, or bit-error analysis."
+        "These deterministic models do not include optical noise, receiver detection, "
+        "SNR, BER, eye diagrams, or link availability prediction."
     )
 
     st.header("Simulation Parameters")
-    st.caption("Communication Medium: Optical Fiber")
-    st.caption(
-        "Free Space Optical is planned as a future extension and is not selectable."
-    )
-
-    simulation_mode = st.selectbox(
-        "Simulation Mode",
-        options=["Attenuation Only", "Attenuation + Chromatic Dispersion"],
+    link_type = st.selectbox(
+        "Link Type",
+        options=["Optical Fiber", "Free-Space Optical"],
         index=0,
-        key="digital_twin_simulation_mode",
+        key="digital_twin_link_type",
     )
 
-    left_column, middle_column, right_column = st.columns(3)
-    with left_column:
-        bit_sequence = st.text_input("Bit Sequence", value="10110010")
-        bit_rate_gbps = st.slider(
-            "Bit Rate (Gbit/s)",
-            min_value=1,
-            max_value=100,
-            value=10,
-            step=1,
-        )
-    with middle_column:
-        transmitted_power_mw = st.slider(
-            "Transmitted Optical Power (mW)",
-            min_value=0.1,
-            max_value=10.0,
-            value=1.0,
-            step=0.1,
-        )
-        fiber_length_km = st.slider(
-            "Fiber Length (km)",
-            min_value=0,
-            max_value=100,
-            value=20,
-            step=1,
-        )
-    with right_column:
-        attenuation_db_per_km = st.slider(
-            "Attenuation Coefficient (dB/km)",
-            min_value=0.10,
-            max_value=1.00,
-            value=0.20,
-            step=0.05,
-        )
-
-    dispersion_coefficient_ps_nm_km = 0.0
-    spectral_width_nm = 0.0
-    if simulation_mode == "Attenuation + Chromatic Dispersion":
-        dispersion_column, spectral_column = st.columns(2)
-        with dispersion_column:
-            dispersion_coefficient_ps_nm_km = st.slider(
-                "Chromatic Dispersion Coefficient (ps/(nm·km))",
-                min_value=-30.0,
-                max_value=30.0,
-                value=17.0,
-                step=0.5,
-            )
-        with spectral_column:
-            spectral_width_nm = st.slider(
-                "Source Spectral Width (nm)",
-                min_value=0.0,
-                max_value=5.0,
-                value=0.1,
-                step=0.01,
-            )
-
-    try:
-        if simulation_mode == "Attenuation + Chromatic Dispersion":
-            result = simulate_fiber_dispersion(
-                bit_sequence=bit_sequence,
-                bit_rate_gbps=float(bit_rate_gbps),
+    if link_type == "Free-Space Optical":
+        left_column, middle_column, right_column = st.columns(3)
+        with left_column:
+            link_distance_km = st.slider("Link Distance (km)", 0.1, 20.0, 1.0, 0.1)
+            transmitted_power_mw = st.slider("Transmitted Optical Power (mW)", 0.1, 100.0, 10.0, 0.1)
+            transmitter_beam_radius_cm = st.slider("Transmitter Beam Radius (cm)", 0.1, 10.0, 2.0, 0.1)
+        with middle_column:
+            beam_divergence_mrad = st.slider("Beam Divergence Half-Angle (mrad)", 0.0, 10.0, 1.0, 0.1)
+            receiver_aperture_diameter_cm = st.slider("Receiver Aperture Diameter (cm)", 1.0, 100.0, 20.0, 1.0)
+        with right_column:
+            atmospheric_attenuation_db_per_km = st.slider("Atmospheric Attenuation (dB/km)", 0.0, 100.0, 1.0, 0.1)
+            pointing_offset_cm = st.slider("Pointing Offset at Receiver Plane (cm)", 0.0, 200.0, 0.0, 1.0)
+        try:
+            result = simulate_fso_link(
+                link_distance_km=float(link_distance_km),
                 transmitted_power_mw=float(transmitted_power_mw),
-                fiber_length_km=float(fiber_length_km),
-                attenuation_db_per_km=float(attenuation_db_per_km),
-                dispersion_coefficient_ps_nm_km=float(dispersion_coefficient_ps_nm_km),
-                spectral_width_nm=float(spectral_width_nm),
+                transmitter_beam_radius_cm=float(transmitter_beam_radius_cm),
+                beam_divergence_mrad=float(beam_divergence_mrad),
+                receiver_aperture_diameter_cm=float(receiver_aperture_diameter_cm),
+                atmospheric_attenuation_db_per_km=float(atmospheric_attenuation_db_per_km),
+                pointing_offset_cm=float(pointing_offset_cm),
             )
-        else:
-            result = simulate_fiber_attenuation(
-                bit_sequence=bit_sequence,
-                bit_rate_gbps=float(bit_rate_gbps),
-                transmitted_power_mw=float(transmitted_power_mw),
-                fiber_length_km=float(fiber_length_km),
-                attenuation_db_per_km=float(attenuation_db_per_km),
-            )
-    except ValueError as error:
-        st.error(str(error))
-        return
+        except ValueError as error:
+            st.error(str(error))
+            return
 
-    metric_columns = st.columns(5)
-    metric_values = [
-        ("Transmitted Power", f"{result.transmitted_power_mw:.3f} mW"),
-        ("Received Power", f"{result.received_power_mw:.6g} mW"),
-        ("Total Fiber Loss", f"{result.total_loss_db:.3f} dB"),
-        ("Remaining Optical Power", f"{result.remaining_power_percent:.3f} %"),
-        ("Bit Duration", f"{result.bit_duration_ns:.6g} ns"),
-    ]
-
-    for column, (label, value) in zip(metric_columns, metric_values, strict=True):
-        with column:
-            st.metric(label=label, value=value)
-
-    if result.dispersion_enabled:
-        dispersion_metric_columns = st.columns(5)
-        dispersion_metric_values = [
-            ("Temporal Broadening (ps)", f"{result.temporal_broadening_ps:.6g} ps"),
-            ("Temporal Broadening (ns)", f"{result.temporal_broadening_ns:.6g} ns"),
-            ("Bit Duration (ns)", f"{result.bit_duration_ns:.6g} ns"),
-            ("Broadening Ratio", f"{result.broadening_ratio:.6g}"),
-            ("Dispersion Regime", result.dispersion_regime),
+        first_metric_columns = st.columns(5)
+        first_metric_values = [
+            ("Transmitted Power", f"{result.transmitted_power_mw:.3f} mW"),
+            ("Received Power", f"{result.received_power_mw:.6g} mW"),
+            ("Total Link Loss", f"{result.total_link_loss_db:.3f} dB"),
+            ("Remaining Optical Power", f"{result.remaining_power_percent:.3f} %"),
+            ("Link Regime", result.link_regime),
         ]
-        for column, (label, value) in zip(dispersion_metric_columns, dispersion_metric_values, strict=True):
+        for column, (label, value) in zip(first_metric_columns, first_metric_values, strict=True):
             with column:
                 st.metric(label=label, value=value)
 
-    st.header("Transmitted and Received NRZ/OOK Signals")
-    figure = (
-        create_dispersion_comparison_figure(result)
-        if result.dispersion_enabled
-        else create_signal_comparison_figure(result)
-    )
-    st.plotly_chart(figure, width="stretch")
-
-    st.header("Understand the Result")
-    observations = build_educational_observations(result)
-    foundation_tab, engineering_tab, research_tab = st.tabs(
-        ["Foundation", "Engineering", "Research Perspective"]
-    )
-
-    with foundation_tab:
-        for observation in observations["foundation"]:
-            st.write(f"- {observation}")
-
-    with engineering_tab:
-        st.latex(r"A = \alpha L")
-        st.write(
-            f"Current substitution: A = {result.attenuation_db_per_km:.2f} "
-            f"dB/km × {result.fiber_length_km:.0f} km = "
-            f"{result.total_loss_db:.3f} dB."
-        )
-        st.latex(r"T = 10^{-A/10}")
-        st.write(
-            f"Linear attenuation factor: "
-            f"T = {result.linear_attenuation_factor:.12g}."
-        )
-        st.latex(r"P_{rx} = P_{tx} T")
-        st.write(
-            f"Current received power: {result.transmitted_power_mw:.3f} mW × "
-            f"{result.linear_attenuation_factor:.12g} = "
-            f"{result.received_power_mw:.12g} mW."
-        )
-        st.latex(r"T_b = \frac{1}{R_b}")
-        st.write(f"Current bit duration: {result.bit_duration_ns:.6g} ns.")
-        for observation in observations["engineering"]:
-            st.write(f"- {observation}")
-
-    if result.dispersion_enabled:
-        st.info(
-            "This model uses a deterministic Gaussian-convolution approximation to "
-            "demonstrate chromatic-dispersion-induced temporal broadening. The Gaussian "
-            "kernel uses finite, computationally bounded support for interactive "
-            "visualization. It is not a full optical field or receiver simulation."
-        )
-        st.header("Understanding Chromatic Dispersion")
-        dispersion_foundation_tab, dispersion_engineering_tab, dispersion_research_tab = st.tabs(
-            ["Foundation", "Engineering", "Research Perspective"]
-        )
-        with dispersion_foundation_tab:
-            st.write("- Different wavelength components travel at slightly different group velocities.")
-            st.write("- Pulses spread in time, so adjacent symbols can overlap when broadening is large.")
-            st.write("- Attenuation reduces pulse height; dispersion changes pulse width and shape.")
-        with dispersion_engineering_tab:
-            st.latex(r"\Delta t = |D| \Delta\lambda L")
-            st.write("- Δt: estimated total temporal broadening.")
-            st.write("- D: chromatic dispersion coefficient in ps/(nm·km).")
-            st.write("- Δλ: source spectral width in nm.")
-            st.write("- L: fiber length in km.")
-            st.latex(r"\mathrm{Broadening\ ratio} = \frac{\Delta t}{T_b}")
-            st.write("- Attenuation changes signal amplitude.")
-            st.write("- Dispersion changes temporal shape.")
-            st.write("- The current model does not calculate BER.")
-        with dispersion_research_tab:
-            st.write("- Gaussian convolution is an educational intensity-domain approximation.")
-            st.write("- The model omits chirp, PMD, noise, receiver bandwidth, and nonlinear propagation.")
-            st.write("- It is not a full optical field or receiver simulation.")
-
-    with research_tab:
-        st.subheader("Model assumptions")
-        assumptions = [
-            "ideal NRZ/OOK transmitter",
-            "zero optical power for logical zero",
-            "constant attenuation coefficient",
-            "no connector or splice loss",
-            "no dispersion" if not result.dispersion_enabled else "educational chromatic dispersion included",
-            "no noise",
-            "ideal bandwidth",
-            "ideal detection is not modelled",
+        second_metric_columns = st.columns(5)
+        second_metric_values = [
+            ("Beam Radius at Receiver", f"{result.beam_radius_at_receiver_m:.6g} m"),
+            ("Beam Diameter at Receiver", f"{result.beam_diameter_at_receiver_m:.6g} m"),
+            ("Geometric Capture", f"{100 * result.geometric_capture_fraction:.6g} %"),
+            ("Atmospheric Loss", f"{result.atmospheric_loss_db:.6g} dB"),
+            ("Pointing Loss", f"{result.pointing_loss_db:.6g} dB"),
         ]
-        for assumption in assumptions:
-            st.write(f"- {assumption}")
+        for column, (label, value) in zip(second_metric_columns, second_metric_values, strict=True):
+            with column:
+                st.metric(label=label, value=value)
 
-        st.subheader("Validity and limitations")
-        st.write("This model is useful for:")
-        useful_cases = [
-            "verifying dB-to-linear power relationships",
-            "studying link-loss sensitivity",
-            "teaching attenuation",
-            "building the first layer of a digital twin",
-        ]
-        for useful_case in useful_cases:
-            st.write(f"- {useful_case}")
-
-        st.write("This model is not sufficient for:")
-        limitations = [
-            "waveform fidelity studies",
-            "high-speed system design",
-            "eye-diagram prediction",
-            "BER estimation",
-            "nonlinear-regime analysis",
-            "experimental receiver prediction",
-        ]
-        for limitation in limitations:
-            st.write(f"- {limitation}")
-
-        st.subheader("Research extensions")
-        extensions = [
-            "wavelength-dependent attenuation",
-            "connector and splice loss",
-            "chromatic dispersion",
-            "laser chirp",
-            "receiver responsivity",
-            "shot and thermal noise",
-            "OSNR",
-            "eye diagrams",
-            "BER estimation",
-            "nonlinear Schrödinger equation models",
-            "validation against laboratory measurements",
-        ]
-        for extension in extensions:
-            st.write(f"- {extension}")
-
-        st.subheader("Experimental connection")
-        st.write(
-            "The attenuation model could be validated by launching known power "
-            "from a calibrated optical source into a known fiber length, measuring "
-            "input and output power with an optical power meter, and comparing the "
-            "measured loss with the predicted dB loss."
+        st.warning(
+            "This deterministic FSO model demonstrates Gaussian-beam spreading, finite "
+            "receiver-aperture collection, atmospheric attenuation, and pointing-offset "
+            "loss. It does not model turbulence, scintillation, receiver noise, BER, or link availability."
         )
-        for observation in observations["research"]:
-            st.write(f"- {observation}")
+        st.header("FSO Power Budget")
+        st.plotly_chart(create_fso_power_budget_figure(result), width="stretch")
+        st.header("Receiver-Plane Beam Profile")
+        st.plotly_chart(create_fso_beam_profile_figure(result), width="stretch")
+
+        st.header("Understanding Free-Space Optical Links")
+        observations = build_fso_educational_observations(result)
+        foundation_tab, engineering_tab, research_tab = st.tabs(["Foundation", "Engineering", "Research Perspective"])
+        with foundation_tab:
+            for observation in observations["foundation"]:
+                st.write(f"- {observation}")
+        with engineering_tab:
+            st.latex(r"w_{rx} = w_0 + \theta L")
+            st.latex(r"\eta_{geo} = 1 - \exp(-2 a_{rx}^2 / w_{rx}^2)")
+            st.latex(r"\eta_{point} = \exp(-2 r_{offset}^2 / w_{rx}^2)")
+            st.latex(r"A_{atm} = \gamma L")
+            st.latex(r"P_{rx} = P_{tx}\eta_{geo}\eta_{point}10^{-A_{atm}/10}")
+            st.write("- w_rx: beam radius at receiver in m; w_0: transmitter beam radius in m; theta: divergence half-angle in rad; L: distance in m or km as labelled.")
+            st.write("- a_rx: receiver aperture radius in m; r_offset: lateral beam-centre displacement in m; gamma: atmospheric attenuation in dB/km.")
+            st.write("- Geometric loss is caused by finite aperture capture.")
+            st.write("- Atmospheric loss is caused by propagation attenuation.")
+            st.write("- Pointing loss is caused by beam-centre displacement.")
+            st.write("- No BER is calculated.")
+            for observation in observations["engineering"]:
+                st.write(f"- {observation}")
+        with research_tab:
+            for observation in observations["research"]:
+                st.write(f"- {observation}")
+
+        simulation_evidence = build_fso_simulation_evidence(result)
+    else:
+        simulation_mode = st.selectbox(
+            "Simulation Mode",
+            options=["Attenuation Only", "Attenuation + Chromatic Dispersion"],
+            index=0,
+            key="digital_twin_simulation_mode",
+        )
+        left_column, middle_column, right_column = st.columns(3)
+        with left_column:
+            bit_sequence = st.text_input("Bit Sequence", value="10110010")
+            bit_rate_gbps = st.slider("Bit Rate (Gbit/s)", min_value=1, max_value=100, value=10, step=1)
+        with middle_column:
+            transmitted_power_mw = st.slider("Transmitted Optical Power (mW)", min_value=0.1, max_value=10.0, value=1.0, step=0.1)
+            fiber_length_km = st.slider("Fiber Length (km)", min_value=0, max_value=100, value=20, step=1)
+        with right_column:
+            attenuation_db_per_km = st.slider("Attenuation Coefficient (dB/km)", min_value=0.10, max_value=1.00, value=0.20, step=0.05)
+        dispersion_coefficient_ps_nm_km = 0.0
+        spectral_width_nm = 0.0
+        if simulation_mode == "Attenuation + Chromatic Dispersion":
+            dispersion_column, spectral_column = st.columns(2)
+            with dispersion_column:
+                dispersion_coefficient_ps_nm_km = st.slider("Chromatic Dispersion Coefficient (ps/(nm·km))", -30.0, 30.0, 17.0, 0.5)
+            with spectral_column:
+                spectral_width_nm = st.slider("Source Spectral Width (nm)", 0.0, 5.0, 0.1, 0.01)
+        try:
+            result = simulate_fiber_dispersion(bit_sequence, float(bit_rate_gbps), float(transmitted_power_mw), float(fiber_length_km), float(attenuation_db_per_km), float(dispersion_coefficient_ps_nm_km), float(spectral_width_nm)) if simulation_mode == "Attenuation + Chromatic Dispersion" else simulate_fiber_attenuation(bit_sequence, float(bit_rate_gbps), float(transmitted_power_mw), float(fiber_length_km), float(attenuation_db_per_km))
+        except ValueError as error:
+            st.error(str(error))
+            return
+
+        metric_columns = st.columns(5)
+        metric_values = [("Transmitted Power", f"{result.transmitted_power_mw:.3f} mW"), ("Received Power", f"{result.received_power_mw:.6g} mW"), ("Total Fiber Loss", f"{result.total_loss_db:.3f} dB"), ("Remaining Optical Power", f"{result.remaining_power_percent:.3f} %"), ("Bit Duration", f"{result.bit_duration_ns:.6g} ns")]
+        for column, (label, value) in zip(metric_columns, metric_values, strict=True):
+            with column:
+                st.metric(label=label, value=value)
+        if result.dispersion_enabled:
+            dispersion_metric_columns = st.columns(5)
+            dispersion_metric_values = [("Temporal Broadening (ps)", f"{result.temporal_broadening_ps:.6g} ps"), ("Temporal Broadening (ns)", f"{result.temporal_broadening_ns:.6g} ns"), ("Bit Duration (ns)", f"{result.bit_duration_ns:.6g} ns"), ("Broadening Ratio", f"{result.broadening_ratio:.6g}"), ("Dispersion Regime", result.dispersion_regime)]
+            for column, (label, value) in zip(dispersion_metric_columns, dispersion_metric_values, strict=True):
+                with column:
+                    st.metric(label=label, value=value)
+        st.header("Transmitted and Received NRZ/OOK Signals")
+        figure = create_dispersion_comparison_figure(result) if result.dispersion_enabled else create_signal_comparison_figure(result)
+        st.plotly_chart(figure, width="stretch")
+        st.header("Understand the Result")
+        observations = build_educational_observations(result)
+        foundation_tab, engineering_tab, research_tab = st.tabs(["Foundation", "Engineering", "Research Perspective"])
+        with foundation_tab:
+            for observation in observations["foundation"]:
+                st.write(f"- {observation}")
+        with engineering_tab:
+            st.latex(r"A = \alpha L")
+            st.write(f"Current substitution: A = {result.attenuation_db_per_km:.2f} dB/km × {result.fiber_length_km:.0f} km = {result.total_loss_db:.3f} dB.")
+            st.latex(r"T = 10^{-A/10}")
+            st.write(f"Linear attenuation factor: T = {result.linear_attenuation_factor:.12g}.")
+            st.latex(r"P_{rx} = P_{tx} T")
+            st.write(f"Current received power: {result.transmitted_power_mw:.3f} mW × {result.linear_attenuation_factor:.12g} = {result.received_power_mw:.12g} mW.")
+            st.latex(r"T_b = \frac{1}{R_b}")
+            st.write(f"Current bit duration: {result.bit_duration_ns:.6g} ns.")
+            for observation in observations["engineering"]:
+                st.write(f"- {observation}")
+        if result.dispersion_enabled:
+            st.info("This model uses a deterministic Gaussian-convolution approximation to demonstrate chromatic-dispersion-induced temporal broadening. The Gaussian kernel uses finite, computationally bounded support for interactive visualization. It is not a full optical field or receiver simulation.")
+            st.header("Understanding Chromatic Dispersion")
+            dispersion_foundation_tab, dispersion_engineering_tab, dispersion_research_tab = st.tabs(["Foundation", "Engineering", "Research Perspective"])
+            with dispersion_foundation_tab:
+                st.write("- Different wavelength components travel at slightly different group velocities.")
+                st.write("- Pulses spread in time, so adjacent symbols can overlap when broadening is large.")
+                st.write("- Attenuation reduces pulse height; dispersion changes pulse width and shape.")
+            with dispersion_engineering_tab:
+                st.latex(r"\Delta t = |D| \Delta\lambda L")
+                st.write("- Δt: estimated total temporal broadening.")
+                st.write("- D: chromatic dispersion coefficient in ps/(nm·km).")
+                st.write("- Δλ: source spectral width in nm.")
+                st.write("- L: fiber length in km.")
+                st.latex(r"\mathrm{Broadening\ ratio} = \frac{\Delta t}{T_b}")
+                st.write("- Attenuation changes signal amplitude.")
+                st.write("- Dispersion changes temporal shape.")
+                st.write("- The current model does not calculate BER.")
+            with dispersion_research_tab:
+                st.write("- Gaussian convolution is an educational intensity-domain approximation.")
+                st.write("- The model omits chirp, PMD, noise, receiver bandwidth, and nonlinear propagation.")
+                st.write("- It is not a full optical field or receiver simulation.")
+        with research_tab:
+            st.subheader("Model assumptions")
+            assumptions = ["ideal NRZ/OOK transmitter", "zero optical power for logical zero", "constant attenuation coefficient", "no connector or splice loss", "no dispersion" if not result.dispersion_enabled else "educational chromatic dispersion included", "no noise", "ideal bandwidth", "ideal detection is not modelled"]
+            for assumption in assumptions:
+                st.write(f"- {assumption}")
+            st.subheader("Validity and limitations")
+            st.write("This model is useful for:")
+            for useful_case in ["verifying dB-to-linear power relationships", "studying link-loss sensitivity", "teaching attenuation", "building the first layer of a digital twin"]:
+                st.write(f"- {useful_case}")
+            st.write("This model is not sufficient for:")
+            for limitation in ["waveform fidelity studies", "high-speed system design", "eye-diagram prediction", "BER estimation", "nonlinear-regime analysis", "experimental receiver prediction"]:
+                st.write(f"- {limitation}")
+            st.subheader("Research extensions")
+            for extension in ["wavelength-dependent attenuation", "connector and splice loss", "chromatic dispersion", "laser chirp", "receiver responsivity", "shot and thermal noise", "OSNR", "eye diagrams", "BER estimation", "nonlinear Schrödinger equation models", "validation against laboratory measurements"]:
+                st.write(f"- {extension}")
+            st.subheader("Experimental connection")
+            st.write("The attenuation model could be validated by launching known power from a calibrated optical source into a known fiber length, measuring input and output power with an optical power meter, and comparing the measured loss with the predicted dB loss.")
+            for observation in observations["research"]:
+                st.write(f"- {observation}")
+        simulation_evidence = build_simulation_evidence(result)
 
     st.header("AI Explanation of This Simulation")
-    st.info(
-        "Simulation values are calculated deterministically in Python. "
-        "OpenAI explains the supplied results but does not calculate or modify them."
-    )
-    simulation_evidence = build_simulation_evidence(result)
+    st.info("Simulation values are calculated deterministically in Python. OpenAI explains the supplied results but does not calculate or modify them.")
     current_simulation_fingerprint = simulation_evidence_fingerprint(simulation_evidence)
     evidence_text = format_simulation_evidence(simulation_evidence)
     api_key = _get_openai_api_key()
@@ -576,35 +522,16 @@ def render_digital_twin() -> None:
 
     if api_key is None:
         st.warning("OpenAI API access is not configured for AI simulation explanations.")
-        st.write(
-            "Add OPENAI_API_KEY to Streamlit Community Cloud app secrets. "
-            "The deterministic Digital Twin remains fully operational without it."
-        )
+        st.write("Add OPENAI_API_KEY to Streamlit Community Cloud app secrets. The deterministic Digital Twin remains fully operational without it.")
     else:
         with st.form("simulation_ai_explanation_form"):
-            explanation_level = st.selectbox(
-                "Explanation Level",
-                options=["Foundation", "Engineering", "Research Perspective"],
-                index=1,
-                key="simulation_explanation_level",
-            )
+            explanation_level = st.selectbox("Explanation Level", options=["Foundation", "Engineering", "Research Perspective"], index=1, key="simulation_explanation_level")
             submitted = st.form_submit_button("Explain Current Simulation")
-
         if submitted:
             try:
                 with st.spinner("Generating an AI explanation for the current deterministic result..."):
-                    explanation = generate_simulation_explanation(
-                        result=result,
-                        level=explanation_level,
-                        api_key=api_key,
-                        model=model,
-                    )
-                st.session_state["simulation_ai_explanation"] = {
-                    "explanation_text": explanation.explanation_text,
-                    "model": explanation.model,
-                    "level": explanation.level,
-                    "simulation_fingerprint": current_simulation_fingerprint,
-                }
+                    explanation = generate_simulation_explanation(result=result, level=explanation_level, api_key=api_key, model=model)
+                st.session_state["simulation_ai_explanation"] = {"explanation_text": explanation.explanation_text, "model": explanation.model, "level": explanation.level, "simulation_fingerprint": current_simulation_fingerprint}
             except ValueError as error:
                 st.error(str(error))
             except AuthenticationError:
@@ -628,10 +555,7 @@ def render_digital_twin() -> None:
             with st.expander("Simulation Evidence Sent to OpenAI"):
                 st.text(evidence_text)
         else:
-            st.caption(
-                "Simulation parameters changed. Generate a new AI explanation for the current result."
-            )
-
+            st.caption("Simulation parameters changed. Generate a new AI explanation for the current result.")
 
 
 

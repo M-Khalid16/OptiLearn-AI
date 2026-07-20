@@ -9,6 +9,7 @@ from typing import Any
 
 from openai import OpenAI
 
+from src.fso_simulator import FSOSimulationResult
 from src.optical_simulator import FiberSimulationResult
 
 
@@ -47,6 +48,32 @@ class SimulationEvidence:
     dispersion_regime: str = "Small"
 
 
+
+
+@dataclass(frozen=True)
+class FSOSimulationEvidence:
+    """Scalar evidence extracted from a deterministic FSO simulation result."""
+
+    link_type: str
+    link_distance_km: float
+    transmitted_power_mw: float
+    transmitter_beam_radius_m: float
+    beam_divergence_mrad: float
+    receiver_aperture_diameter_m: float
+    atmospheric_attenuation_db_per_km: float
+    pointing_offset_m: float
+    beam_radius_at_receiver_m: float
+    geometric_capture_fraction: float
+    pointing_transmission_factor: float
+    atmospheric_loss_db: float
+    geometric_loss_db: float
+    pointing_loss_db: float
+    total_link_loss_db: float
+    received_power_mw: float
+    remaining_power_percent: float
+    link_regime: str
+
+
 @dataclass(frozen=True)
 class SimulationExplanation:
     """Generated explanation plus the exact scalar evidence it explains."""
@@ -54,7 +81,7 @@ class SimulationExplanation:
     explanation_text: str
     model: str
     level: str
-    evidence: SimulationEvidence
+    evidence: SimulationEvidence | FSOSimulationEvidence
 
 
 def _require_finite_scalar(value: float | int, name: str) -> None:
@@ -119,8 +146,66 @@ def build_simulation_evidence(result: FiberSimulationResult) -> SimulationEviden
     )
 
 
-def format_simulation_evidence(evidence: SimulationEvidence) -> str:
+
+def build_fso_simulation_evidence(result: FSOSimulationResult) -> FSOSimulationEvidence:
+    """Build scalar evidence from a deterministic FSO simulation result."""
+    scalar_values = {
+        "link_distance_km": result.link_distance_km,
+        "transmitted_power_mw": result.transmitted_power_mw,
+        "transmitter_beam_radius_m": result.transmitter_beam_radius_m,
+        "beam_divergence_mrad": result.beam_divergence_mrad,
+        "receiver_aperture_diameter_m": result.receiver_aperture_diameter_m,
+        "atmospheric_attenuation_db_per_km": result.atmospheric_attenuation_db_per_km,
+        "pointing_offset_m": result.pointing_offset_m,
+        "beam_radius_at_receiver_m": result.beam_radius_at_receiver_m,
+        "geometric_capture_fraction": result.geometric_capture_fraction,
+        "pointing_transmission_factor": result.pointing_transmission_factor,
+        "atmospheric_loss_db": result.atmospheric_loss_db,
+        "geometric_loss_db": result.geometric_loss_db,
+        "pointing_loss_db": result.pointing_loss_db,
+        "total_link_loss_db": result.total_link_loss_db,
+        "received_power_mw": result.received_power_mw,
+        "remaining_power_percent": result.remaining_power_percent,
+    }
+    for name, value in scalar_values.items():
+        _require_finite_scalar(value, name)
+    return FSOSimulationEvidence(link_type="Free-Space Optical", link_regime=result.link_regime, **scalar_values)
+
+def format_simulation_evidence(evidence: SimulationEvidence | FSOSimulationEvidence) -> str:
     """Format deterministic scalar evidence for display and OpenAI grounding."""
+    if isinstance(evidence, FSOSimulationEvidence):
+        return "\n".join([
+            "SIMULATION INPUTS",
+            f"Link type: {evidence.link_type}",
+            f"Link distance: {evidence.link_distance_km:.12g} km",
+            f"Transmitted optical power: {evidence.transmitted_power_mw:.12g} mW",
+            f"Transmitter beam radius: {evidence.transmitter_beam_radius_m:.12g} m",
+            f"Beam divergence half-angle: {evidence.beam_divergence_mrad:.12g} mrad",
+            f"Receiver aperture diameter: {evidence.receiver_aperture_diameter_m:.12g} m",
+            f"Atmospheric attenuation: {evidence.atmospheric_attenuation_db_per_km:.12g} dB/km",
+            f"Pointing offset: {evidence.pointing_offset_m:.12g} m",
+            "",
+            "DETERMINISTIC PYTHON RESULTS",
+            f"Beam radius at receiver: {evidence.beam_radius_at_receiver_m:.12g} m",
+            f"Geometric capture fraction: {evidence.geometric_capture_fraction:.12g}",
+            f"Pointing transmission factor: {evidence.pointing_transmission_factor:.12g}",
+            f"Atmospheric loss: {evidence.atmospheric_loss_db:.12g} dB",
+            f"Geometric loss: {evidence.geometric_loss_db:.12g} dB",
+            f"Pointing loss: {evidence.pointing_loss_db:.12g} dB",
+            f"Total link loss: {evidence.total_link_loss_db:.12g} dB",
+            f"Received optical power: {evidence.received_power_mw:.12g} mW",
+            f"Remaining optical power: {evidence.remaining_power_percent:.12g}%",
+            f"Link regime: {evidence.link_regime}",
+            "",
+            "MODEL SCOPE",
+            "- Deterministic Gaussian-beam spreading",
+            "- Finite receiver-aperture geometric collection",
+            "- Atmospheric attenuation in dB/km",
+            "- Simplified deterministic pointing-offset loss",
+            "- No turbulence or scintillation",
+            "- No receiver noise, SNR, BER, eye diagram, or availability calculation",
+            "- No waveform or beam-profile arrays sent to OpenAI",
+        ])
     return "\n".join(
         [
             "SIMULATION INPUTS",
@@ -197,7 +282,22 @@ def build_simulation_explanation_instructions(level: str) -> str:
     )
 
 
-def simulation_evidence_fingerprint(evidence: SimulationEvidence) -> str:
+
+def build_fso_simulation_explanation_instructions(level: str) -> str:
+    """Build grounded Responses API instructions for deterministic FSO evidence."""
+    if level not in SUPPORTED_EXPLANATION_LEVELS:
+        raise ValueError("Unsupported simulation explanation level.")
+    return (
+        "You are explaining one deterministic free-space optical link-budget simulation for OptiLearn AI. "
+        "Python calculations are authoritative; do not recalculate or alter supplied values. "
+        "Distinguish geometric, atmospheric, and pointing losses. Explain only the supplied deterministic FSO link. "
+        "Do not claim turbulence or scintillation was simulated. Do not claim noise, detection, SNR, BER, eye diagrams, or availability were calculated. "
+        "Do not claim experimental validation occurred. Do not imply AI controlled the simulation. "
+        "Do not use web knowledge. Do not request tools. Support exactly Foundation, Engineering, and Research Perspective explanations. "
+        f"Learning level: {level}."
+    )
+
+def simulation_evidence_fingerprint(evidence: SimulationEvidence | FSOSimulationEvidence) -> str:
     """Return a SHA-256 fingerprint for scalar simulation evidence."""
     payload = json.dumps(asdict(evidence), sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
@@ -222,6 +322,13 @@ _CAPABILITY_PATTERNS = {
     "receiver": r"\breceivers?\b",
     "nonlinear": r"\bnonlinear\s+effects?\b|\bnonlinearities\b",
     "free_space": r"\bfree[- ]space\s+optical(?:\s+propagation)?\b",
+    "turbulence": r"\bturbulence\b",
+    "scintillation": r"\bscintillation\b",
+    "beam_wander": r"\bbeam\s+wander\b",
+    "snr": r"\bSNR\b|signal[- ]to[- ]noise",
+    "availability": r"\blink\s+availability\b|\bavailability\b",
+    "adaptive_optics": r"\badaptive\s+optics\b",
+    "weather_probability": r"\bweather\s+probability\b",
 }
 _ACTION_PATTERN = (
     r"\b(?:simulat(?:ed|es|e|ing)|includ(?:ed|es|e|ing)|calculat(?:ed|es|e|ing)|"
@@ -257,14 +364,14 @@ def _is_affirmative_capability_claim(clause: str, capability_pattern: str) -> bo
     )
 
 
-def validate_simulation_explanation(explanation_text: str, evidence: SimulationEvidence) -> None:
+def validate_simulation_explanation(explanation_text: str, evidence: SimulationEvidence | FSOSimulationEvidence) -> None:
     """Reject blank explanations or affirmative unsupported simulation claims."""
-    if not isinstance(evidence, SimulationEvidence):
-        raise ValueError("evidence must be a SimulationEvidence instance.")
+    if not isinstance(evidence, SimulationEvidence | FSOSimulationEvidence):
+        raise ValueError("evidence must be a supported simulation evidence instance.")
     if not isinstance(explanation_text, str) or not explanation_text.strip():
         raise RuntimeError("The OpenAI response did not contain a simulation explanation.")
 
-    dispersion_allowed = evidence.simulation_mode == "Attenuation + Chromatic Dispersion"
+    dispersion_allowed = isinstance(evidence, SimulationEvidence) and evidence.simulation_mode == "Attenuation + Chromatic Dispersion"
     for clause in _split_capability_clauses(explanation_text):
         for capability_name, capability_pattern in _CAPABILITY_PATTERNS.items():
             if not _contains_capability(clause, capability_pattern):
@@ -273,12 +380,14 @@ def validate_simulation_explanation(explanation_text: str, evidence: SimulationE
                 continue
             if capability_name == "dispersion" and dispersion_allowed:
                 continue
+            if isinstance(evidence, FSOSimulationEvidence) and capability_name == "free_space":
+                continue
             if _is_affirmative_capability_claim(clause, capability_pattern):
                 raise RuntimeError(_UNSUPPORTED_CAPABILITY_MESSAGE)
 
 
 def generate_simulation_explanation(
-    result: FiberSimulationResult,
+    result: FiberSimulationResult | FSOSimulationResult,
     level: str,
     api_key: str,
     model: str = "gpt-5-mini",
@@ -289,9 +398,13 @@ def generate_simulation_explanation(
         raise ValueError("OpenAI API key must be configured.")
     if not isinstance(model, str) or not model.strip():
         raise ValueError("OpenAI model must be a nonempty string.")
-    evidence = build_simulation_evidence(result)
+    if isinstance(result, FSOSimulationResult):
+        evidence = build_fso_simulation_evidence(result)
+        instructions = build_fso_simulation_explanation_instructions(level)
+    else:
+        evidence = build_simulation_evidence(result)
+        instructions = build_simulation_explanation_instructions(level)
     evidence_text = format_simulation_evidence(evidence)
-    instructions = build_simulation_explanation_instructions(level)
     openai_client = client if client is not None else OpenAI(api_key=api_key.strip())
     response = openai_client.responses.create(
         model=model.strip(),
@@ -308,4 +421,23 @@ def generate_simulation_explanation(
         model=model.strip(),
         level=level,
         evidence=evidence,
+    )
+
+
+def generate_fso_simulation_explanation(
+    result: FSOSimulationResult,
+    level: str,
+    api_key: str,
+    model: str = "gpt-5-mini",
+    client: Any | None = None,
+) -> SimulationExplanation:
+    """Generate an AI explanation for a deterministic FSO simulation result."""
+    if not isinstance(result, FSOSimulationResult):
+        raise ValueError("result must be an FSOSimulationResult instance.")
+    return generate_simulation_explanation(
+        result=result,
+        level=level,
+        api_key=api_key,
+        model=model,
+        client=client,
     )
