@@ -8,7 +8,6 @@ This guide prepares OptiLearn AI for Streamlit Community Cloud deployment.
 https://optilearn-ai-h3dgt9c9onvohsxi2u2aa4.streamlit.app/
 
 
-
 ## Repository settings
 
 - Repository URL: https://github.com/M-Khalid16/OptiLearn-AI
@@ -62,7 +61,11 @@ OPENAI_API_KEY = ""
 
 OPENAI_MODEL = "your-verified-model-name"
 
+
+OPENAI_MODEL = "your-verified-model-name"
+
 OPENAI_MODEL = "ADD_VERIFIED_MODEL_NAME"
+
 
 OPTILEARN_DEMO_MODE = "false"
 ```
@@ -83,5 +86,9 @@ Do not commit API keys or Streamlit secrets files.
 
 Record the final deployed URL externally as `https://optilearn-ai-h3dgt9c9onvohsxi2u2aa4.streamlit.app/` once verified.
 
+
+Record the final deployed URL externally as `https://optilearn-ai-h3dgt9c9onvohsxi2u2aa4.streamlit.app/` once verified.
+
 Record the final deployed URL externally as `ADD_DEPLOYMENT_URL` once verified.
+
 
