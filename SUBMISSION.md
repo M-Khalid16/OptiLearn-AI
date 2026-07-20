@@ -10,7 +10,12 @@ An AI-powered educational digital twin that helps learners explore optical commu
 
 OptiLearn AI addresses a modern engineering-education problem: learners have unprecedented access to information, but still need structured opportunities to reason, visualize, experiment, and develop scientific judgement. Optical-communication learners often encounter equations, link budgets, and mode concepts as disconnected abstractions. Static notes make it difficult to see how parameter changes affect received power, dispersion, beam collection, or mode behavior.
 
+
+
+OptiLearn AI addresses a modern engineering-education problem: learners have unprecedented access to information, but still need structured opportunities to reason, visualize, experiment, and develop scientific judgement. Optical-communication learners often encounter equations, link budgets, and mode concepts as disconnected abstractions. Static notes make it difficult to see how parameter changes affect received power, dispersion, beam collection, or mode behavior.
+
 Optical-communication learners often encounter equations, link budgets, and mode concepts as disconnected abstractions. Static notes make it difficult to see how parameter changes affect received power, dispersion, beam collection, or mode behavior.
+
 
 
 ## Solution
@@ -38,8 +43,10 @@ Python modules validate inputs, calculate simulation results, grade quizzes, sol
 
 OptiLearn AI is not a generic chatbot, not only a simulator, and not only a quiz app. It integrates evidence-grounded tutoring, deterministic models, visualization, assessment, and waveguide investigation. It uses AI without surrendering scientific calculation to AI, and it supports offline deterministic demonstrations when live API access is unavailable.
 
-OptiLearn AI combines scientific transparency with an end-to-end learning journey: upload, understand, explore, practise, and investigate.
 
+OptiLearn AI is not a generic chatbot, not only a simulator, and not only a quiz app. It integrates evidence-grounded tutoring, deterministic models, visualization, assessment, and waveguide investigation. It uses AI without surrendering scientific calculation to AI, and it supports offline deterministic demonstrations when live API access is unavailable.
+
+OptiLearn AI combines scientific transparency with an end-to-end learning journey: upload, understand, explore, practise, and investigate.
 
 ## Technical Stack
 Streamlit, Python, NumPy, SciPy, Plotly, PyMuPDF, and OpenAI API.
