@@ -2,9 +2,11 @@
 
 This guide prepares OptiLearn AI for Streamlit Community Cloud deployment.
 
+
 ## Live Deployment
 
 https://optilearn-ai-h3dgt9c9onvohsxi2u2aa4.streamlit.app/
+
 
 ## Repository settings
 
@@ -56,7 +58,15 @@ OpenAI access is optional. Add secrets only if live AI features are required:
 
 ```toml
 OPENAI_API_KEY = ""
+
 OPENAI_MODEL = "your-verified-model-name"
+
+
+OPENAI_MODEL = "your-verified-model-name"
+
+OPENAI_MODEL = "ADD_VERIFIED_MODEL_NAME"
+
+
 OPTILEARN_DEMO_MODE = "false"
 ```
 
@@ -73,4 +83,12 @@ Do not commit API keys or Streamlit secrets files.
 - If OpenAI is configured, ask one grounded AI Tutor question.
 - If OpenAI is not configured, confirm AI-only features fail gracefully.
 
+
 Record the final deployed URL externally as `https://optilearn-ai-h3dgt9c9onvohsxi2u2aa4.streamlit.app/` once verified.
+
+
+Record the final deployed URL externally as `https://optilearn-ai-h3dgt9c9onvohsxi2u2aa4.streamlit.app/` once verified.
+
+Record the final deployed URL externally as `ADD_DEPLOYMENT_URL` once verified.
+
+
