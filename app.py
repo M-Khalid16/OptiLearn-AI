@@ -58,7 +58,7 @@ from src.ui_components import (
     inject_global_styles,
     render_feature_card,
     render_footer,
-    render_learning_step,
+    render_learning_stage,
     render_next_step,
     render_page_header,
     render_scientific_trust_panel,
@@ -105,7 +105,6 @@ def _is_demo_mode_enabled() -> bool:
 
 
 def _request_page(page: str) -> None:
-    """Safely request sidebar navigation on the next rerun."""
     if page not in PAGES:
         raise ValueError(f"Unsupported navigation destination: {page}")
     st.session_state["requested_page"] = page
@@ -113,17 +112,19 @@ def _request_page(page: str) -> None:
 
 
 def _consume_requested_page() -> str | None:
-    """Consume and validate a requested page before sidebar widgets are created."""
     requested_page = st.session_state.pop("requested_page", None)
+
     if requested_page is None:
         return None
+
     if requested_page not in PAGES:
         return None
+
     return requested_page
 
 
 def render_home() -> None:
-    """Render the polished project landing page."""
+    """Render the professional OptiLearn AI landing page."""
     st.markdown('<div class="optilearn-hero">', unsafe_allow_html=True)
     st.markdown('<div class="optilearn-product">OptiLearn AI</div>', unsafe_allow_html=True)
     st.markdown('<div class="optilearn-tagline">AI-Powered Educational Digital Twin for Optical Communication</div>', unsafe_allow_html=True)
@@ -136,322 +137,35 @@ def render_home() -> None:
     st.markdown('<p class="optilearn-prose">Today’s students can access textbooks, videos, search engines, simulations, and AI-generated answers within seconds. Yet abundant information can encourage fast reading without deep reasoning. Learners may recognise an equation without understanding its assumptions, physical meaning, or engineering consequences.</p>', unsafe_allow_html=True)
     st.markdown('<p class="optilearn-prose">OptiLearn AI is designed to slow that process down in the right way. It invites learners to question, change parameters, observe results, compare models, inspect evidence, and explain what the physics means.</p>', unsafe_allow_html=True)
 
-    c1, c2, c3, c4 = st.columns(4)
-    if c1.button("Explore the Digital Twin", use_container_width=True):
-        _request_page("Digital Twin")
-    if c2.button("Open Mode Explorer", use_container_width=True):
-        _request_page("Mode Explorer")
-    if c3.button("Prepare Lecture Notes", use_container_width=True):
-        _request_page("Lecture Notes")
-    if c4.button("See the Learning Experience", use_container_width=True):
-        _request_page("Quiz Lab")
-
-    st.header("Why This Matters Now")
-    left, right = st.columns(2)
-    with left:
-        render_feature_card("", "More Information Is Not the Same as More Understanding", "Engineers increasingly work in environments filled with instant answers, automated tools, and rapidly changing knowledge. The ability to verify, interpret, model, and reason is becoming more valuable—not less.")
-    with right:
-        render_feature_card("", "Future Technologies Demand Strong Foundations", "Photonics, high-capacity networks, optical sensing, quantum communication, and next-generation computing depend on engineers who can connect mathematical models with physical behaviour and experimental judgement.")
-    st.write("OptiLearn AI focuses on those foundations. It does not attempt to simulate every future technology; it helps learners develop the understanding needed to approach them responsibly.")
-
-    st.header("From Information to Understanding")
-    st.write("OptiLearn AI creates a continuous learning experience in which reading, questioning, modelling, visualization, practice, and investigation reinforce one another.")
-    stages = [
-        (1, "Prepare", "Organize text-based lecture notes for evidence-grounded learning."),
-        (2, "Question", "Ask focused questions and inspect the passages that support each explanation."),
-        (3, "Model", "Change engineering parameters and observe deterministic optical-link behaviour."),
-        (4, "Reflect", "Compare results, examine assumptions, and explain what the model can and cannot establish."),
-        (5, "Investigate", "Explore guided modes, launch coupling, and ray behaviour to develop deeper physical intuition."),
-    ]
-    cols = st.columns(2)
-    for i, stage in enumerate(stages):
-        with cols[i % 2]:
-            render_learning_step(*stage)
-
-    st.header("Core Capabilities")
-    st.write("OptiLearn AI brings the main stages of optical-communication learning into one workspace—from preparing lecture notes and exploring deterministic engineering models to practising concepts and investigating guided optical modes.")
-    capabilities = [
-        ("Lecture Notes", "Prepare text-based PDFs for evidence-grounded study with page-level provenance."),
-        ("Digital Twin", "Explore deterministic fiber attenuation, chromatic dispersion, and free-space optical link behaviour."),
-        ("Grounded AI Tutor", "Ask questions answered from retrieved lecture-note passages rather than unsupported general responses."),
-        ("Quiz Lab", "Practise optical-communication concepts with deterministic, locally graded formative questions."),
-        ("Mode Explorer", "Study scalar LP modes, Gaussian launch coupling, meridional rays, and skew-ray propagation."),
-        ("Scientific Transparency", "Inspect equations, assumptions, evidence, limitations, and the boundary between deterministic calculations and AI explanation."),
-    ]
-    for row in (capabilities[:3], capabilities[3:]):
-        cols = st.columns(3)
-        for col, (title, body) in zip(cols, row, strict=True):
-            with col:
-                render_feature_card("", title, body)
-
-    st.header("One Workspace. Multiple Ways to Think.")
-    panels = [
-        ("Read and Retrieve", "Move from lecture material to focused evidence."),
-        ("Calculate and Visualize", "Turn equations into observable engineering relationships."),
-        ("Explain and Challenge", "Interpret results, question assumptions, and compare conclusions."),
-        ("Practise and Transfer", "Apply understanding to new questions and unfamiliar parameter choices."),
-    ]
-    cols = st.columns(2)
-    for i, (title, body) in enumerate(panels):
-        with cols[i % 2]:
-            render_feature_card("", title, body)
-    st.write("The value of the platform is not any single page. It is the connection between them.")
-
-    st.header("Developing the Whole Engineer")
-    st.write("Engineering education involves more than remembering formulas. Learners also need opportunities to reason, interact with tools, make judgements, build confidence, and communicate technical meaning.")
-    outcomes = [
-        ("Cognitive Skills", "Interpret equations; analyse parameter relationships; connect models with physical meaning; evaluate assumptions and conclusions."),
-        ("Practical Engineering Skills", "Configure simulations systematically; interpret plots and numerical evidence; practise disciplined parameter studies; prepare for laboratory and experimental work."),
-        ("Critical and Scientific Judgement", "Distinguish calculation from explanation; identify unsupported claims; compare simplified models; recognise limitations and missing physics."),
-        ("Curiosity and Confidence", "Explore difficult concepts safely; learn through iteration; develop persistence; become more comfortable asking deeper questions."),
-    ]
-    cols = st.columns(2)
-    for i, (title, body) in enumerate(outcomes):
-        with cols[i % 2]:
-            render_feature_card("", title, body)
-    st.info("These experiences are designed to support skill development; they do not replace laboratory teaching, expert supervision, or formal assessment.")
-
-    st.header("Foundations for the Technologies Ahead")
-    st.markdown('<div class="optilearn-panel"><p class="optilearn-prose">The engineers and scientists who build the next generation of photonic, communication, and quantum technologies will need more than access to information. They will need deep understanding, visual intuition, critical judgement, and the ability to keep learning throughout their careers.</p><p class="optilearn-prose">Optical-link analysis, wave propagation, loss, dispersion, guided modes, and evidence-based reasoning are foundational ideas that extend into high-capacity networks, integrated photonics, optical sensing, quantum communication, advanced imaging, and next-generation computing systems.</p><p class="optilearn-prose">OptiLearn AI does not claim to model all of these technologies. It helps learners build the conceptual and engineering foundations from which advanced study can grow.</p></div>', unsafe_allow_html=True)
-    label_cols = st.columns(3)
-    for i, label in enumerate(["Communications", "Photonics", "Optical Sensing", "Quantum Technologies", "Advanced Computing", "Lifelong Learning"]):
-        with label_cols[i % 3]:
-            render_status_badge(label, "information")
-    st.subheader("Learning Beyond the Classroom")
-    st.write("Engineering knowledge changes continuously. New devices, standards, modelling tools, and research discoveries require professionals to revisit assumptions and learn throughout their careers.")
-    st.write("By making equations explorable and limitations visible, OptiLearn AI encourages a habit of active learning: investigate the evidence, test the model, ask what is missing, and continue learning.")
-
-    render_scientific_trust_panel()
-
-    st.header("Do More Than Read the Equation")
-    st.write("Change the parameters. Observe the physics. Question the assumptions. Test your understanding. Build the habits of mind required for advanced engineering and lifelong learning.")
-    a, b = st.columns(2)
-    if a.button("Start with the Digital Twin", type="primary", use_container_width=True):
-        _request_page("Digital Twin")
-    if b.button("Explore Optical-Fiber Modes", use_container_width=True):
-        _request_page("Mode Explorer")
-
-PAGES = (
-    "Home",
-    "Lecture Notes",
-    "Digital Twin",
-    "AI Tutor",
-    "Quiz Lab",
-    "Mode Explorer",
-)
-
-
-
-def _is_demo_mode_enabled() -> bool:
-    """Return whether transparent local demo mode is enabled."""
-    try:
-        value = st.secrets["OPTILEARN_DEMO_MODE"]
-    except (KeyError, FileNotFoundError):
-        value = os.environ.get("OPTILEARN_DEMO_MODE", "")
-    return str(value).strip().lower() in {"1", "true", "yes", "on"}
-
-
-def _request_page(page: str) -> None:
-    """Safely request sidebar navigation on the next rerun."""
-    if page not in PAGES:
-        raise ValueError(f"Unsupported navigation destination: {page}")
-    st.session_state["requested_page"] = page
-    st.rerun()
-
-
-def _consume_requested_page() -> str | None:
-    """Consume and validate a requested page before sidebar widgets are created."""
-    requested_page = st.session_state.pop("requested_page", None)
-    if requested_page is None:
-        return None
-    if requested_page not in PAGES:
-        return None
-    return requested_page
-
-
-def render_home() -> None:
-    """Render the polished project landing page."""
-    st.markdown('<div class="optilearn-hero">', unsafe_allow_html=True)
-    st.markdown('<div class="optilearn-product">OptiLearn AI</div>', unsafe_allow_html=True)
-    st.markdown('<div class="optilearn-tagline">AI-Powered Educational Digital Twin for Optical Communication</div>', unsafe_allow_html=True)
-    st.markdown('<div class="optilearn-hero-statement">Learn optical communication by exploring the physics and engineering—not just memorizing the equations.</div>', unsafe_allow_html=True)
-    st.markdown('<p class="optilearn-prose">OptiLearn AI combines grounded tutoring, deterministic digital twins, formative assessment, and interactive optical-fiber visualization in one educational workspace.</p>', unsafe_allow_html=True)
-    st.info("Scientific values are calculated by deterministic Python models. AI supports grounded explanation and tutoring without replacing the engineering calculations.")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    st.header("Information Is Everywhere. Understanding Still Takes Work.")
-    st.markdown('<p class="optilearn-prose">Today’s students can access textbooks, videos, search engines, simulations, and AI-generated answers within seconds. Yet abundant information can encourage fast reading without deep reasoning. Learners may recognise an equation without understanding its assumptions, physical meaning, or engineering consequences.</p>', unsafe_allow_html=True)
-    st.markdown('<p class="optilearn-prose">OptiLearn AI is designed to slow that process down in the right way. It invites learners to question, change parameters, observe results, compare models, inspect evidence, and explain what the physics means.</p>', unsafe_allow_html=True)
-
-    c1, c2, c3, c4 = st.columns(4)
-    if c1.button("Explore the Digital Twin", use_container_width=True):
-        _request_page("Digital Twin")
-    if c2.button("Open Mode Explorer", use_container_width=True):
-        _request_page("Mode Explorer")
-    if c3.button("Prepare Lecture Notes", use_container_width=True):
-        _request_page("Lecture Notes")
-    if c4.button("See the Learning Experience", use_container_width=True):
-        _request_page("Quiz Lab")
-
-    st.header("Why This Matters Now")
-    left, right = st.columns(2)
-    with left:
-        render_feature_card("", "More Information Is Not the Same as More Understanding", "Engineers increasingly work in environments filled with instant answers, automated tools, and rapidly changing knowledge. The ability to verify, interpret, model, and reason is becoming more valuable—not less.")
-    with right:
-        render_feature_card("", "Future Technologies Demand Strong Foundations", "Photonics, high-capacity networks, optical sensing, quantum communication, and next-generation computing depend on engineers who can connect mathematical models with physical behaviour and experimental judgement.")
-    st.write("OptiLearn AI focuses on those foundations. It does not attempt to simulate every future technology; it helps learners develop the understanding needed to approach them responsibly.")
-
-    st.header("From Information to Understanding")
-    st.write("OptiLearn AI creates a continuous learning experience in which reading, questioning, modelling, visualization, practice, and investigation reinforce one another.")
-    stages = [
-        (1, "Prepare", "Organize text-based lecture notes for evidence-grounded learning."),
-        (2, "Question", "Ask focused questions and inspect the passages that support each explanation."),
-        (3, "Model", "Change engineering parameters and observe deterministic optical-link behaviour."),
-        (4, "Reflect", "Compare results, examine assumptions, and explain what the model can and cannot establish."),
-        (5, "Investigate", "Explore guided modes, launch coupling, and ray behaviour to develop deeper physical intuition."),
-    ]
-    cols = st.columns(2)
-    for i, stage in enumerate(stages):
-        with cols[i % 2]:
-            render_learning_step(*stage)
-
-    st.header("Core Capabilities")
-    st.write("OptiLearn AI brings the main stages of optical-communication learning into one workspace—from preparing lecture notes and exploring deterministic engineering models to practising concepts and investigating guided optical modes.")
-    capabilities = [
-        ("Lecture Notes", "Prepare text-based PDFs for evidence-grounded study with page-level provenance."),
-        ("Digital Twin", "Explore deterministic fiber attenuation, chromatic dispersion, and free-space optical link behaviour."),
-        ("Grounded AI Tutor", "Ask questions answered from retrieved lecture-note passages rather than unsupported general responses."),
-        ("Quiz Lab", "Practise optical-communication concepts with deterministic, locally graded formative questions."),
-        ("Mode Explorer", "Study scalar LP modes, Gaussian launch coupling, meridional rays, and skew-ray propagation."),
-        ("Scientific Transparency", "Inspect equations, assumptions, evidence, limitations, and the boundary between deterministic calculations and AI explanation."),
-    ]
-    for row in (capabilities[:3], capabilities[3:]):
-        cols = st.columns(3)
-        for col, (title, body) in zip(cols, row, strict=True):
-            with col:
-                render_feature_card("", title, body)
-
-    st.header("One Workspace. Multiple Ways to Think.")
-    panels = [
-        ("Read and Retrieve", "Move from lecture material to focused evidence."),
-        ("Calculate and Visualize", "Turn equations into observable engineering relationships."),
-        ("Explain and Challenge", "Interpret results, question assumptions, and compare conclusions."),
-        ("Practise and Transfer", "Apply understanding to new questions and unfamiliar parameter choices."),
-    ]
-    cols = st.columns(2)
-    for i, (title, body) in enumerate(panels):
-        with cols[i % 2]:
-            render_feature_card("", title, body)
-    st.write("The value of the platform is not any single page. It is the connection between them.")
-
-    st.header("Developing the Whole Engineer")
-    st.write("Engineering education involves more than remembering formulas. Learners also need opportunities to reason, interact with tools, make judgements, build confidence, and communicate technical meaning.")
-    outcomes = [
-        ("Cognitive Skills", "Interpret equations; analyse parameter relationships; connect models with physical meaning; evaluate assumptions and conclusions."),
-        ("Practical Engineering Skills", "Configure simulations systematically; interpret plots and numerical evidence; practise disciplined parameter studies; prepare for laboratory and experimental work."),
-        ("Critical and Scientific Judgement", "Distinguish calculation from explanation; identify unsupported claims; compare simplified models; recognise limitations and missing physics."),
-        ("Curiosity and Confidence", "Explore difficult concepts safely; learn through iteration; develop persistence; become more comfortable asking deeper questions."),
-    ]
-    cols = st.columns(2)
-    for i, (title, body) in enumerate(outcomes):
-        with cols[i % 2]:
-            render_feature_card("", title, body)
-    st.info("These experiences are designed to support skill development; they do not replace laboratory teaching, expert supervision, or formal assessment.")
-
-    st.header("Foundations for the Technologies Ahead")
-    st.markdown('<div class="optilearn-panel"><p class="optilearn-prose">The engineers and scientists who build the next generation of photonic, communication, and quantum technologies will need more than access to information. They will need deep understanding, visual intuition, critical judgement, and the ability to keep learning throughout their careers.</p><p class="optilearn-prose">Optical-link analysis, wave propagation, loss, dispersion, guided modes, and evidence-based reasoning are foundational ideas that extend into high-capacity networks, integrated photonics, optical sensing, quantum communication, advanced imaging, and next-generation computing systems.</p><p class="optilearn-prose">OptiLearn AI does not claim to model all of these technologies. It helps learners build the conceptual and engineering foundations from which advanced study can grow.</p></div>', unsafe_allow_html=True)
-    label_cols = st.columns(3)
-    for i, label in enumerate(["Communications", "Photonics", "Optical Sensing", "Quantum Technologies", "Advanced Computing", "Lifelong Learning"]):
-        with label_cols[i % 3]:
-            render_status_badge(label, "information")
-    st.subheader("Learning Beyond the Classroom")
-    st.write("Engineering knowledge changes continuously. New devices, standards, modelling tools, and research discoveries require professionals to revisit assumptions and learn throughout their careers.")
-    st.write("By making equations explorable and limitations visible, OptiLearn AI encourages a habit of active learning: investigate the evidence, test the model, ask what is missing, and continue learning.")
-
-    render_scientific_trust_panel()
-
-    st.header("Do More Than Read the Equation")
-    st.write("Change the parameters. Observe the physics. Question the assumptions. Test your understanding. Build the habits of mind required for advanced engineering and lifelong learning.")
-    a, b = st.columns(2)
-    if a.button("Start with the Digital Twin", type="primary", use_container_width=True):
-        _request_page("Digital Twin")
-    if b.button("Explore Optical-Fiber Modes", use_container_width=True):
-        _request_page("Mode Explorer")
-
-def _is_demo_mode_enabled() -> bool:
-    """Return whether transparent local demo mode is enabled."""
-    try:
-        value = st.secrets["OPTILEARN_DEMO_MODE"]
-    except (KeyError, FileNotFoundError):
-        value = os.environ.get("OPTILEARN_DEMO_MODE", "")
-    return str(value).strip().lower() in {"1", "true", "yes", "on"}
-
-
-def _request_page(page: str) -> None:
-    """Safely request sidebar navigation on the next rerun."""
-    st.session_state["requested_page"] = page
-    st.rerun()
-
-
-def render_home() -> None:
-    """Render the polished project landing page."""
-    st.markdown('<div class="optilearn-hero">', unsafe_allow_html=True)
-
-    st.markdown('<div class="optilearn-product">OptiLearn AI</div>', unsafe_allow_html=True)
-    st.markdown('<div class="optilearn-tagline">AI-Powered Educational Digital Twin for Optical Communication</div>', unsafe_allow_html=True)
-    st.markdown('<div class="optilearn-hero-statement">Learn optical communication by exploring the physics and engineering—not just memorizing the equations.</div>', unsafe_allow_html=True)
-    st.markdown('<p class="optilearn-prose">OptiLearn AI combines grounded tutoring, deterministic digital twins, formative assessment, and interactive optical-fiber visualization in one educational workspace.</p>', unsafe_allow_html=True)
-    st.info("Scientific values are calculated by deterministic Python models. AI supports grounded explanation and tutoring without replacing the engineering calculations.")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    st.header("Information Is Everywhere. Understanding Still Takes Work.")
-    st.markdown('<p class="optilearn-prose">Today’s students can access textbooks, videos, search engines, simulations, and AI-generated answers within seconds. Yet abundant information can encourage fast reading without deep reasoning. Learners may recognise an equation without understanding its assumptions, physical meaning, or engineering consequences.</p>', unsafe_allow_html=True)
-    st.markdown('<p class="optilearn-prose">OptiLearn AI is designed to slow that process down in the right way. It invites learners to question, change parameters, observe results, compare models, inspect evidence, and explain what the physics means.</p>', unsafe_allow_html=True)
-
-    c1, c2, c3, c4 = st.columns(4)
-
-    render_page_header(
-        "OptiLearn AI",
-        "AI-Powered Educational Digital Twin for Optical Communication",
-        eyebrow="OpenAI Build Week Prototype",
-        badge="OpenAI Build Week Prototype",
-    )
-    st.header("Learn optical communication by exploring the physics—not just memorizing the equations.")
-    st.write("OptiLearn AI combines grounded tutoring, deterministic digital twins, formative quizzes, and interactive optical-fiber mode visualization in one educational workspace.")
-    st.info("Scientific values are calculated in deterministic Python models. AI is used only for grounded explanations and tutoring.")
     c1, c2, c3 = st.columns(3)
-
     if c1.button("Explore the Digital Twin", use_container_width=True):
         _request_page("Digital Twin")
     if c2.button("Open Mode Explorer", use_container_width=True):
         _request_page("Mode Explorer")
-
     if c3.button("Prepare Lecture Notes", use_container_width=True):
         _request_page("Lecture Notes")
-    if c4.button("See the Learning Experience", use_container_width=True):
-        _request_page("Quiz Lab")
 
     st.header("Why This Matters Now")
     left, right = st.columns(2)
     with left:
-        render_feature_card("", "More Information Is Not the Same as More Understanding", "Engineers increasingly work in environments filled with instant answers, automated tools, and rapidly changing knowledge. The ability to verify, interpret, model, and reason is becoming more valuable—not less.")
+        render_feature_card("More Information Is Not the Same as More Understanding", "Engineers increasingly work in environments filled with instant answers, automated tools, and rapidly changing knowledge. The ability to verify, interpret, model, and reason is becoming more valuable—not less.")
     with right:
-        render_feature_card("", "Future Technologies Demand Strong Foundations", "Photonics, high-capacity networks, optical sensing, quantum communication, and next-generation computing depend on engineers who can connect mathematical models with physical behaviour and experimental judgement.")
+        render_feature_card("Future Technologies Demand Strong Foundations", "Photonics, high-capacity networks, optical sensing, quantum communication, and next-generation computing depend on engineers who can connect mathematical models with physical behaviour and experimental judgement.")
     st.write("OptiLearn AI focuses on those foundations. It does not attempt to simulate every future technology; it helps learners develop the understanding needed to approach them responsibly.")
 
     st.header("From Information to Understanding")
     st.write("OptiLearn AI creates a continuous learning experience in which reading, questioning, modelling, visualization, practice, and investigation reinforce one another.")
     stages = [
-        (1, "Prepare", "Organize text-based lecture notes for evidence-grounded learning."),
-        (2, "Question", "Ask focused questions and inspect the passages that support each explanation."),
-        (3, "Model", "Change engineering parameters and observe deterministic optical-link behaviour."),
-        (4, "Reflect", "Compare results, examine assumptions, and explain what the model can and cannot establish."),
-        (5, "Investigate", "Explore guided modes, launch coupling, and ray behaviour to develop deeper physical intuition."),
+        ("Prepare", "Organize text-based lecture notes for evidence-grounded learning."),
+        ("Question", "Ask focused questions and inspect the passages that support each explanation."),
+        ("Model", "Change engineering parameters and observe deterministic optical-link behaviour."),
+        ("Reflect", "Compare results, examine assumptions, and explain what the model can and cannot establish."),
+        ("Investigate", "Explore guided modes, launch coupling, and ray behaviour to develop deeper physical intuition."),
     ]
     cols = st.columns(2)
-    for i, stage in enumerate(stages):
+    for i, (title, body) in enumerate(stages):
         with cols[i % 2]:
-            render_learning_step(*stage)
+            render_learning_stage(title, body)
 
     st.header("Core Capabilities")
     st.write("OptiLearn AI brings the main stages of optical-communication learning into one workspace—from preparing lecture notes and exploring deterministic engineering models to practising concepts and investigating guided optical modes.")
@@ -467,34 +181,29 @@ def render_home() -> None:
         cols = st.columns(3)
         for col, (title, body) in zip(cols, row, strict=True):
             with col:
-                render_feature_card("", title, body)
+                render_feature_card(title, body)
 
     st.header("One Workspace. Multiple Ways to Think.")
-    panels = [
-        ("Read and Retrieve", "Move from lecture material to focused evidence."),
-        ("Calculate and Visualize", "Turn equations into observable engineering relationships."),
-        ("Explain and Challenge", "Interpret results, question assumptions, and compare conclusions."),
-        ("Practise and Transfer", "Apply understanding to new questions and unfamiliar parameter choices."),
-    ]
-    cols = st.columns(2)
-    for i, (title, body) in enumerate(panels):
-        with cols[i % 2]:
-            render_feature_card("", title, body)
+    for row in ([ ("Read and Retrieve", "Move from lecture material to focused evidence."), ("Calculate and Visualize", "Turn equations into observable engineering relationships.") ], [ ("Explain and Challenge", "Interpret results, question assumptions, and compare conclusions."), ("Practise and Transfer", "Apply understanding to new questions and unfamiliar parameter choices.") ]):
+        cols = st.columns(2)
+        for col, (title, body) in zip(cols, row, strict=True):
+            with col:
+                render_feature_card(title, body)
     st.write("The value of the platform is not any single page. It is the connection between them.")
 
     st.header("Developing the Whole Engineer")
     st.write("Engineering education involves more than remembering formulas. Learners also need opportunities to reason, interact with tools, make judgements, build confidence, and communicate technical meaning.")
     outcomes = [
-        ("Cognitive Skills", "Interpret equations; analyse parameter relationships; connect models with physical meaning; evaluate assumptions and conclusions."),
-        ("Practical Engineering Skills", "Configure simulations systematically; interpret plots and numerical evidence; practise disciplined parameter studies; prepare for laboratory and experimental work."),
-        ("Critical and Scientific Judgement", "Distinguish calculation from explanation; identify unsupported claims; compare simplified models; recognise limitations and missing physics."),
-        ("Curiosity and Confidence", "Explore difficult concepts safely; learn through iteration; develop persistence; become more comfortable asking deeper questions."),
+        ("Cognitive Skills", "Interpret equations, analyse parameter relationships, connect models with physical meaning, and evaluate assumptions and conclusions."),
+        ("Practical Engineering Skills", "Configure simulations systematically, interpret plots and numerical evidence, practise disciplined parameter studies, and prepare for laboratory work."),
+        ("Critical and Scientific Judgement", "Distinguish calculation from explanation, identify unsupported claims, compare simplified models, and recognise missing physics."),
+        ("Curiosity and Confidence", "Explore difficult concepts safely, learn through iteration, develop persistence, and become more comfortable asking deeper questions."),
     ]
     cols = st.columns(2)
     for i, (title, body) in enumerate(outcomes):
         with cols[i % 2]:
-            render_feature_card("", title, body)
-    st.info("These experiences are designed to support skill development; they do not replace laboratory teaching, expert supervision, or formal assessment.")
+            render_feature_card(title, body)
+    render_scope_notice("These experiences are designed to support skill development.", "They do not replace laboratory teaching, expert supervision, or formal assessment.")
 
     st.header("Foundations for the Technologies Ahead")
     st.markdown('<div class="optilearn-panel"><p class="optilearn-prose">The engineers and scientists who build the next generation of photonic, communication, and quantum technologies will need more than access to information. They will need deep understanding, visual intuition, critical judgement, and the ability to keep learning throughout their careers.</p><p class="optilearn-prose">Optical-link analysis, wave propagation, loss, dispersion, guided modes, and evidence-based reasoning are foundational ideas that extend into high-capacity networks, integrated photonics, optical sensing, quantum communication, advanced imaging, and next-generation computing systems.</p><p class="optilearn-prose">OptiLearn AI does not claim to model all of these technologies. It helps learners build the conceptual and engineering foundations from which advanced study can grow.</p></div>', unsafe_allow_html=True)
@@ -502,10 +211,12 @@ def render_home() -> None:
     for i, label in enumerate(["Communications", "Photonics", "Optical Sensing", "Quantum Technologies", "Advanced Computing", "Lifelong Learning"]):
         with label_cols[i % 3]:
             render_status_badge(label, "information")
-    st.subheader("Learning Beyond the Classroom")
+
+    st.header("Learning Beyond the Classroom")
     st.write("Engineering knowledge changes continuously. New devices, standards, modelling tools, and research discoveries require professionals to revisit assumptions and learn throughout their careers.")
     st.write("By making equations explorable and limitations visible, OptiLearn AI encourages a habit of active learning: investigate the evidence, test the model, ask what is missing, and continue learning.")
 
+    st.header("Built for Scientific Transparency")
     render_scientific_trust_panel()
 
     st.header("Do More Than Read the Equation")
@@ -515,58 +226,6 @@ def render_home() -> None:
         _request_page("Digital Twin")
     if b.button("Explore Optical-Fiber Modes", use_container_width=True):
         _request_page("Mode Explorer")
-
-    if c3.button("Upload Lecture Notes", use_container_width=True):
-        _request_page("Lecture Notes")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    st.header("Core Capabilities")
-    cards = [
-        ("📄", "Lecture Notes", "Upload text-based PDFs and preserve page-level evidence."),
-        ("🔬", "Digital Twin", "Explore deterministic fiber attenuation, dispersion, and FSO link budgets."),
-        ("💬", "Grounded AI Tutor", "Ask questions answered from retrieved lecture-note passages."),
-        ("✓", "Quiz Lab", "Practise with deterministic, locally graded optical-communication questions."),
-        ("◎", "Mode Explorer", "Examine scalar LP modes, launch coupling, meridional rays, and skew rays."),
-        ("ℹ", "Scientific Transparency", "See equations, assumptions, limitations, and deterministic evidence."),
-    ]
-    for row in (cards[:3], cards[3:]):
-        cols = st.columns(3)
-        for col, card in zip(cols, row, strict=True):
-            with col:
-                render_feature_card(*card)
-
-    st.header("A Guided Learning Journey")
-    steps = [
-        (1, "Upload", "Add text-based optical-communication lecture notes."),
-        (2, "Understand", "Ask grounded questions with page-level evidence."),
-        (3, "Explore", "Change physical parameters in deterministic simulations."),
-        (4, "Practise", "Test understanding with formative quizzes."),
-        (5, "Investigate", "Explore LP modes, Gaussian coupling, and ray propagation."),
-    ]
-    cols = st.columns(2)
-    for i, step in enumerate(steps):
-        with cols[i % 2]:
-            render_learning_step(*step)
-
-    st.header("What You Can Explore")
-    models = [
-        ("Fiber attenuation", "Calculates dB loss and received power; useful for link-loss intuition; limited to ideal attenuation without noise."),
-        ("Chromatic dispersion", "Calculates temporal broadening; useful for symbol-spreading intuition; not a full optical-field or receiver model."),
-        ("Free-space optical links", "Calculates beam spreading, aperture capture, pointing loss, and atmospheric loss; omits turbulence and scintillation."),
-        ("Scalar LP modes", "Solves guided weak-guidance mode families; connects V-number to fields; not full-vector FEM/BPM/FDTD."),
-        ("Meridional and skew rays", "Traces geometric ray paths; useful for acceptance intuition; rays are not wave modes."),
-        ("Gaussian launch coupling", "Computes overlap with displayed scalar modes; useful for alignment intuition; not an experimental power measurement."),
-    ]
-    for title, body in models:
-        render_feature_card("•", title, body)
-
-    render_scientific_trust_panel()
-    st.header("Start Exploring")
-    st.write("Start with a deterministic simulation, then use the explanations and quizzes to test your understanding.")
-    if st.button("Start Exploring", type="primary"):
-        _request_page("Digital Twin")
-
-
     render_footer()
 
 
@@ -1322,7 +981,7 @@ def render_ai_tutor() -> None:
     model = _get_openai_model()
     if api_key is None:
         render_status_badge("API unavailable", "warning")
-        st.info("Live AI tutoring is unavailable because OpenAI API access is not configured. Uploaded notes remain available in this session, and deterministic pages still work.")
+        st.info("Live AI explanation is unavailable because OpenAI API access is not configured. The deterministic simulation and evidence remain fully available.")
         if _is_demo_mode_enabled():
             render_status_badge("Demo explanation", "warning")
             st.write("Demo tutor readiness: local templates can summarize retrieved lecture-note text only when passages are available, and they are not live OpenAI responses.")
@@ -1365,7 +1024,7 @@ def render_ai_tutor() -> None:
         except AuthenticationError:
             st.error("The OpenAI API key was rejected. Check the app’s secret configuration.")
         except RateLimitError:
-            st.error("The OpenAI API rate limit or usage limit was reached. Please try again later or review API billing.")
+            st.error("The OpenAI API usage limit was reached. Deterministic calculations are unaffected.")
         except APIConnectionError:
             st.error("OptiLearn AI could not connect to the OpenAI API. Please try again.")
         except APIError:
@@ -1572,34 +1231,22 @@ LP modes follow from the scalar weak-guidance approximation and are not exact fu
     render_footer()
 
 def render_sidebar() -> str:
-    """Render sidebar navigation and return the selected page name."""
-
     requested_page = _consume_requested_page()
+
     if requested_page is not None:
         st.session_state["sidebar_navigation"] = requested_page
-
-
-    pages = ["Home", "Lecture Notes", "Digital Twin", "AI Tutor", "Quiz Lab", "Mode Explorer"]
-    requested_page = st.session_state.pop("requested_page", None)
-    if requested_page in pages:
-
-        st.session_state["current_page"] = requested_page
-        st.session_state["navigation_generation"] = st.session_state.get("navigation_generation", 0) + 1
-    current_page = st.session_state.get("current_page", "Home")
-    index = pages.index(current_page) if current_page in pages else 0
-    navigation_key = f"sidebar_navigation_{st.session_state.get('navigation_generation', 0)}"
-
-        
-    index = pages.index(st.session_state.get("sidebar_navigation", "Home")) if st.session_state.get("sidebar_navigation", "Home") in pages else 0
-
-
 
     with st.sidebar:
         st.title("OptiLearn AI")
         st.caption("AI-Powered Educational Digital Twin")
         st.divider()
 
-        page = st.radio("Navigation", options=PAGES, key="sidebar_navigation")
+        page = st.radio(
+            "Navigation",
+            options=PAGES,
+            key="sidebar_navigation",
+        )
+
         st.caption(f"Current page: {page}")
         st.divider()
         render_status_badge(
@@ -1607,58 +1254,41 @@ def render_sidebar() -> str:
             "information",
         )
         st.caption(f"Version {APP_VERSION}")
-
-
-        page = st.radio("Navigation", options=PAGES, key="sidebar_navigation")
-        st.caption(f"Current page: {page}")
-        st.divider()
-        st.caption("Educational Engineering Platform")
-        st.caption("Version 1.0.0")
-
-
-        page = st.radio("Navigation", options=pages, index=index, key=navigation_key)
-        st.session_state["current_page"] = page
-        st.caption(f"Current page: {page}")
-        st.divider()
-        st.caption("Educational Engineering Platform")
-        st.caption("Version 1.0.0")
-
-        page = st.radio("Navigation", options=pages, index=index, key="sidebar_navigation")
-        st.caption(f"Current page: {page}")
-        st.divider()
-        render_status_badge("Final Build Week Prototype", "success")
-        st.caption("Version: Milestone 11")
-
-
+        st.caption(
+            "Session-based learning tools. "
+            "No persistent learner profile."
+        )
 
         if _is_demo_mode_enabled():
             render_status_badge("Demo Mode Enabled", "warning")
-            st.caption("AI demonstrations are local templates and are not live OpenAI responses.")
-        st.caption("Session-based learning tools. No persistent learner profile.")
+            st.caption(
+                "AI demonstrations are local templates and are not "
+                "live OpenAI responses."
+            )
+
     return page
 
 
 def main() -> None:
-    """Configure and route the Streamlit application."""
     st.set_page_config(
         page_title="OptiLearn AI",
-        page_icon=None,
         layout="wide",
     )
 
-    page_renderers: tuple[PageRenderer, ...] = (
-        render_home,
-        render_lecture_notes,
-        render_digital_twin,
-        render_ai_tutor,
-        render_quiz,
-        render_mode_explorer,
-    )
-    pages = dict(zip(PAGES, page_renderers, strict=True))
-
     inject_global_styles()
+
     selected_page = render_sidebar()
-    pages[selected_page]()
+
+    page_renderers = {
+        "Home": render_home,
+        "Lecture Notes": render_lecture_notes,
+        "Digital Twin": render_digital_twin,
+        "AI Tutor": render_ai_tutor,
+        "Quiz Lab": render_quiz,
+        "Mode Explorer": render_mode_explorer,
+    }
+
+    page_renderers[selected_page]()
 
 
 if __name__ == "__main__":
