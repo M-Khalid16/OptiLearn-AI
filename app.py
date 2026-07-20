@@ -467,8 +467,9 @@ def render_digital_twin() -> None:
     if result.dispersion_enabled:
         st.info(
             "This model uses a deterministic Gaussian-convolution approximation to "
-            "demonstrate chromatic-dispersion-induced temporal broadening. It is not "
-            "a full optical field or receiver simulation."
+            "demonstrate chromatic-dispersion-induced temporal broadening. The Gaussian "
+            "kernel uses finite, computationally bounded support for interactive "
+            "visualization. It is not a full optical field or receiver simulation."
         )
         st.header("Understanding Chromatic Dispersion")
         dispersion_foundation_tab, dispersion_engineering_tab, dispersion_research_tab = st.tabs(

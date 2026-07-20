@@ -183,16 +183,24 @@ def classify_dispersion_regime(broadening_ratio: float) -> str:
 def _build_gaussian_dispersion_kernel(
     temporal_broadening_ns: float,
     sample_interval_ns: float,
+    max_kernel_samples: int,
 ) -> np.ndarray:
-    """Build a normalized Gaussian kernel for educational temporal spreading.
+    """Build a bounded, normalized Gaussian kernel for educational spreading.
 
     The model treats ``temporal_broadening_ns`` as an effective Gaussian full width
-    at half maximum (FWHM), so sigma = FWHM / (2 sqrt(2 ln 2)). The finite support
-    spans ±4 sigma and is normalized to unit sum. This is an intensity-domain
-    teaching approximation, not a full optical field propagation solution.
+    at half maximum (FWHM), so sigma = FWHM / (2 sqrt(2 ln 2)). The target finite
+    support spans ±4 sigma when it fits inside ``max_kernel_samples``. If that
+    ideal support would be too large for interactive use, the sampled support is
+    symmetrically truncated to the largest allowed odd length and renormalized.
+    This keeps convolution cost bounded while preserving deterministic educational
+    temporal spreading; it is not a full optical field propagation solution.
     """
     _require_finite(temporal_broadening_ns, "Temporal broadening")
     _require_finite(sample_interval_ns, "Sample interval")
+    if isinstance(max_kernel_samples, bool) or not isinstance(max_kernel_samples, int):
+        raise ValueError("Maximum kernel samples must be an integer value.")
+    if max_kernel_samples < 1:
+        raise ValueError("Maximum kernel samples must be at least 1.")
     if temporal_broadening_ns < 0:
         raise ValueError("Temporal broadening must be 0 ns or greater.")
     if sample_interval_ns <= 0:
@@ -200,8 +208,19 @@ def _build_gaussian_dispersion_kernel(
     if temporal_broadening_ns <= sample_interval_ns * 1e-9:
         return np.array([1.0])
 
+    largest_allowed_length = max_kernel_samples
+    if largest_allowed_length % 2 == 0:
+        largest_allowed_length -= 1
+    if largest_allowed_length < 1:
+        largest_allowed_length = 1
+
     sigma_ns = temporal_broadening_ns / (2 * np.sqrt(2 * np.log(2)))
-    radius_samples = max(1, int(np.ceil(4 * sigma_ns / sample_interval_ns)))
+    target_radius_samples = max(1, int(np.ceil(4 * sigma_ns / sample_interval_ns)))
+    allowed_radius_samples = (largest_allowed_length - 1) // 2
+    radius_samples = min(target_radius_samples, allowed_radius_samples)
+    if radius_samples == 0:
+        return np.array([1.0])
+
     sample_offsets = np.arange(-radius_samples, radius_samples + 1, dtype=float)
     kernel = np.exp(-0.5 * ((sample_offsets * sample_interval_ns) / sigma_ns) ** 2)
     kernel_sum = float(np.sum(kernel))
@@ -249,7 +268,11 @@ def simulate_fiber_dispersion(
     temporal_broadening_ns = temporal_broadening_ps / 1000
     broadening_ratio = temporal_broadening_ns / attenuation_result.bit_duration_ns
     sample_interval_ns = attenuation_result.bit_duration_ns / samples_per_bit
-    kernel = _build_gaussian_dispersion_kernel(temporal_broadening_ns, sample_interval_ns)
+    kernel = _build_gaussian_dispersion_kernel(
+        temporal_broadening_ns,
+        sample_interval_ns,
+        len(attenuation_result.transmitted_signal_mw),
+    )
 
     normalized_binary_waveform = attenuation_result.transmitted_signal_mw / transmitted_power_mw
     broadened_normalized = _convolve_same_length(normalized_binary_waveform, kernel)
