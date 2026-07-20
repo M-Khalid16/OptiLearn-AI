@@ -7,7 +7,19 @@ OptiLearn AI
 An AI-powered educational digital twin that helps learners explore optical communication through deterministic simulations, grounded lecture-note tutoring, quizzes, and fiber-mode visualization.
 
 ## Problem
+
 OptiLearn AI addresses a modern engineering-education problem: learners have unprecedented access to information, but still need structured opportunities to reason, visualize, experiment, and develop scientific judgement. Optical-communication learners often encounter equations, link budgets, and mode concepts as disconnected abstractions. Static notes make it difficult to see how parameter changes affect received power, dispersion, beam collection, or mode behavior.
+
+
+OptiLearn AI addresses a modern engineering-education problem: learners have unprecedented access to information, but still need structured opportunities to reason, visualize, experiment, and develop scientific judgement. Optical-communication learners often encounter equations, link budgets, and mode concepts as disconnected abstractions. Static notes make it difficult to see how parameter changes affect received power, dispersion, beam collection, or mode behavior.
+
+
+
+OptiLearn AI addresses a modern engineering-education problem: learners have unprecedented access to information, but still need structured opportunities to reason, visualize, experiment, and develop scientific judgement. Optical-communication learners often encounter equations, link budgets, and mode concepts as disconnected abstractions. Static notes make it difficult to see how parameter changes affect received power, dispersion, beam collection, or mode behavior.
+
+Optical-communication learners often encounter equations, link budgets, and mode concepts as disconnected abstractions. Static notes make it difficult to see how parameter changes affect received power, dispersion, beam collection, or mode behavior.
+
+
 
 ## Solution
 OptiLearn AI integrates text-based lecture-note extraction, grounded tutoring, deterministic fiber and FSO simulations, locally graded quizzes, and scalar LP-mode/ray exploration in one Streamlit learning workspace.
@@ -31,7 +43,18 @@ OpenAI is used only for grounded tutoring from retrieved lecture-note passages a
 Python modules validate inputs, calculate simulation results, grade quizzes, solve scalar LP modes, and trace rays. Evidence builders expose scalar values and assumptions before optional AI explanation.
 
 ## What Makes It Distinctive
+
 OptiLearn AI is not a generic chatbot, not only a simulator, and not only a quiz app. It integrates evidence-grounded tutoring, deterministic models, visualization, assessment, and waveguide investigation. It uses AI without surrendering scientific calculation to AI, and it supports offline deterministic demonstrations when live API access is unavailable.
+
+
+
+OptiLearn AI is not a generic chatbot, not only a simulator, and not only a quiz app. It integrates evidence-grounded tutoring, deterministic models, visualization, assessment, and waveguide investigation. It uses AI without surrendering scientific calculation to AI, and it supports offline deterministic demonstrations when live API access is unavailable.
+
+
+OptiLearn AI is not a generic chatbot, not only a simulator, and not only a quiz app. It integrates evidence-grounded tutoring, deterministic models, visualization, assessment, and waveguide investigation. It uses AI without surrendering scientific calculation to AI, and it supports offline deterministic demonstrations when live API access is unavailable.
+
+OptiLearn AI combines scientific transparency with an end-to-end learning journey: upload, understand, explore, practise, and investigate.
+
 
 ## Technical Stack
 Streamlit, Python, NumPy, SciPy, Plotly, PyMuPDF, and OpenAI API.
@@ -44,6 +67,7 @@ Educational approximations only: no OCR, BER/SNR/OSNR, receiver model, turbulenc
 
 ## Future Impact
 Foundational optical understanding supports future work in photonics, quantum communication, integrated optics, sensing, advanced networks, and future computing systems. OptiLearn AI does not claim to solve or simulate those advanced applications; it helps learners build the foundations needed to approach them responsibly.
+
 
 ## Future Work
 OCR, richer note chunking, receiver-noise education, eye-diagram approximations, turbulence demos, instructor activities, and advanced mode solvers.
