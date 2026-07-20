@@ -136,31 +136,19 @@ OptiLearn AI uses educational deterministic approximations for:
 
 These models are intended for conceptual education and inspection. They are not certified system-design tools.
 
-
 ## Deterministic Python versus OpenAI
 
 | Capability | Implementation | OpenAI required? |
-| --- | --- | --- |
-
-| PDF extraction | Python + PyMuPDF | No |
-
+|---|---|---|
 | PDF text extraction | Python + PyMuPDF | No |
-
 | Fiber attenuation | Deterministic Python | No |
 | Chromatic dispersion | Deterministic Python | No |
 | FSO link budget | Deterministic Python | No |
 | Quiz Lab grading | Deterministic Python | No |
-
 | Mode Explorer | Deterministic Python + NumPy/SciPy | No |
 | Plotly visualization | Plotly | No |
-
-| Mode Explorer | Deterministic Python + SciPy/NumPy | No |
-| Plotting | Plotly | No |
-
 | Grounded AI Tutor | OpenAI API over retrieved note evidence | Yes |
 | Live simulation explanation | OpenAI API over calculated evidence | Yes |
-
-ChatGPT Plus or a ChatGPT subscription is not the same as OpenAI API access. To enable live AI features, configure an OpenAI API key through environment variables or Streamlit secrets.
 
 ## System Requirements
 
