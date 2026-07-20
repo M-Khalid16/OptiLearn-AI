@@ -459,10 +459,11 @@ def render_digital_twin() -> None:
             st.error(str(error))
             return
 
+        st.header("2. Key Metrics")
         first_metric_columns = st.columns(5)
         first_metric_values = [
             ("Transmitted Power", f"{result.transmitted_power_mw:.3f} mW"),
-            ("Received Power", f"{result.received_power_mw:.6g} mW"),
+            ("Received Power", f"{result.received_power_mw:.4g} mW"),
             ("Total Link Loss", f"{result.total_link_loss_db:.3f} dB"),
             ("Remaining Optical Power", f"{result.remaining_power_percent:.3f} %"),
             ("Link Regime", result.link_regime),
@@ -483,17 +484,14 @@ def render_digital_twin() -> None:
             with column:
                 st.metric(label=label, value=value)
 
-        st.warning(
-            "This deterministic FSO model demonstrates Gaussian-beam spreading, finite "
-            "receiver-aperture collection, atmospheric attenuation, and pointing-offset "
-            "loss. It does not model turbulence, scintillation, receiver noise, BER, or link availability."
-        )
-        st.header("FSO Power Budget")
+        st.header("3. Visual Results")
+        st.subheader("FSO Power Budget")
         st.plotly_chart(create_fso_power_budget_figure(result), width="stretch")
-        st.header("Receiver-Plane Beam Profile")
+        st.subheader("Receiver-Plane Beam Profile")
         st.plotly_chart(create_fso_beam_profile_figure(result), width="stretch")
 
-        st.header("Understanding Free-Space Optical Links")
+        st.header("4. Understand the Result")
+        st.subheader("Understanding Free-Space Optical Links")
         observations = build_fso_educational_observations(result)
         foundation_tab, engineering_tab, research_tab = st.tabs(["Foundation", "Engineering", "Research Perspective"])
         with foundation_tab:
@@ -550,8 +548,9 @@ def render_digital_twin() -> None:
             st.error(str(error))
             return
 
+        st.header("2. Key Metrics")
         metric_columns = st.columns(5)
-        metric_values = [("Transmitted Power", f"{result.transmitted_power_mw:.3f} mW"), ("Received Power", f"{result.received_power_mw:.6g} mW"), ("Total Fiber Loss", f"{result.total_loss_db:.3f} dB"), ("Remaining Optical Power", f"{result.remaining_power_percent:.3f} %"), ("Bit Duration", f"{result.bit_duration_ns:.6g} ns")]
+        metric_values = [("Transmitted Power", f"{result.transmitted_power_mw:.3f} mW"), ("Received Power", f"{result.received_power_mw:.4g} mW"), ("Total Fiber Loss", f"{result.total_loss_db:.3f} dB"), ("Remaining Optical Power", f"{result.remaining_power_percent:.3f} %"), ("Bit Duration", f"{result.bit_duration_ns:.6g} ns")]
         for column, (label, value) in zip(metric_columns, metric_values, strict=True):
             with column:
                 st.metric(label=label, value=value)
@@ -561,10 +560,11 @@ def render_digital_twin() -> None:
             for column, (label, value) in zip(dispersion_metric_columns, dispersion_metric_values, strict=True):
                 with column:
                     st.metric(label=label, value=value)
-        st.header("Transmitted and Received NRZ/OOK Signals")
+        st.header("3. Visual Results")
+        st.subheader("Transmitted and Received NRZ/OOK Signals")
         figure = create_dispersion_comparison_figure(result) if result.dispersion_enabled else create_signal_comparison_figure(result)
         st.plotly_chart(figure, width="stretch")
-        st.header("Understand the Result")
+        st.header("4. Understand the Result")
         observations = build_educational_observations(result)
         foundation_tab, engineering_tab, research_tab = st.tabs(["Foundation", "Engineering", "Research Perspective"])
         with foundation_tab:
@@ -583,7 +583,7 @@ def render_digital_twin() -> None:
                 st.write(f"- {observation}")
         if result.dispersion_enabled:
             st.info("This model uses a deterministic Gaussian-convolution approximation to demonstrate chromatic-dispersion-induced temporal broadening. The Gaussian kernel uses finite, computationally bounded support for interactive visualization. It is not a full optical field or receiver simulation.")
-            st.header("Understanding Chromatic Dispersion")
+            st.subheader("Understanding Chromatic Dispersion")
             dispersion_foundation_tab, dispersion_engineering_tab, dispersion_research_tab = st.tabs(["Foundation", "Engineering", "Research Perspective"])
             with dispersion_foundation_tab:
                 st.write("- Different wavelength components travel at slightly different group velocities.")
@@ -604,22 +604,6 @@ def render_digital_twin() -> None:
                 st.write("- The model omits chirp, PMD, noise, receiver bandwidth, and nonlinear propagation.")
                 st.write("- It is not a full optical field or receiver simulation.")
         with research_tab:
-            st.subheader("Model assumptions")
-            assumptions = ["ideal NRZ/OOK transmitter", "zero optical power for logical zero", "constant attenuation coefficient", "no connector or splice loss", "no dispersion" if not result.dispersion_enabled else "educational chromatic dispersion included", "no noise", "ideal bandwidth", "ideal detection is not modelled"]
-            for assumption in assumptions:
-                st.write(f"- {assumption}")
-            st.subheader("Validity and limitations")
-            st.write("This model is useful for:")
-            for useful_case in ["verifying dB-to-linear power relationships", "studying link-loss sensitivity", "teaching attenuation", "building the first layer of a digital twin"]:
-                st.write(f"- {useful_case}")
-            st.write("This model is not sufficient for:")
-            for limitation in ["waveform fidelity studies", "high-speed system design", "eye-diagram prediction", "BER estimation", "nonlinear-regime analysis", "experimental receiver prediction"]:
-                st.write(f"- {limitation}")
-            st.subheader("Research extensions")
-            for extension in ["wavelength-dependent attenuation", "connector and splice loss", "chromatic dispersion", "laser chirp", "receiver responsivity", "shot and thermal noise", "OSNR", "eye diagrams", "BER estimation", "nonlinear Schrödinger equation models", "validation against laboratory measurements"]:
-                st.write(f"- {extension}")
-            st.subheader("Experimental connection")
-            st.write("The attenuation model could be validated by launching known power from a calibrated optical source into a known fiber length, measuring input and output power with an optical power meter, and comparing the measured loss with the predicted dB loss.")
             for observation in observations["research"]:
                 st.write(f"- {observation}")
         simulation_evidence = build_simulation_evidence(result)
@@ -677,6 +661,47 @@ def render_digital_twin() -> None:
         else:
             st.caption("Simulation parameters changed. Generate a new AI explanation for the current result.")
 
+    st.header("6. Assumptions and Limitations")
+    if st.session_state.get("latest_simulation_link_type") == "Free-Space Optical":
+        st.warning(
+            "This deterministic FSO model demonstrates Gaussian-beam spreading, finite "
+            "receiver-aperture collection, atmospheric attenuation, and pointing-offset "
+            "loss. It does not model turbulence, scintillation, receiver noise, BER, or link availability."
+        )
+        fso_foundation_tab, fso_engineering_tab, fso_research_tab = st.tabs(["Foundation", "Engineering", "Research Perspective"])
+        with fso_foundation_tab:
+            st.write("- Beam spreading, aperture collection, atmospheric attenuation, and pointing offset are represented deterministically.")
+            st.write("- The result is intended for link-budget intuition, not link certification.")
+        with fso_engineering_tab:
+            st.write("- No turbulence or scintillation is modelled.")
+            st.write("- No receiver noise, detector bandwidth, background light, SNR, or BER is calculated.")
+            st.write("- No link-availability prediction is produced.")
+        with fso_research_tab:
+            st.write("- Research-grade extensions could add turbulence statistics, scintillation, adaptive optics, receiver noise, coding, weather distributions, and availability analysis.")
+            st.write("- Experimental validation would compare measured received power and beam profiles against calibrated range tests.")
+    else:
+        fiber_foundation_tab, fiber_engineering_tab, fiber_research_tab = st.tabs(["Foundation", "Engineering", "Research Perspective"])
+        with fiber_foundation_tab:
+            st.subheader("Model assumptions")
+            assumptions = ["ideal NRZ/OOK transmitter", "zero optical power for logical zero", "constant attenuation coefficient", "no connector or splice loss", "no dispersion" if not result.dispersion_enabled else "educational chromatic dispersion included", "no noise", "ideal bandwidth", "ideal detection is not modelled"]
+            for assumption in assumptions:
+                st.write(f"- {assumption}")
+        with fiber_engineering_tab:
+            st.subheader("Validity and limitations")
+            st.write("This model is useful for:")
+            for useful_case in ["verifying dB-to-linear power relationships", "studying link-loss sensitivity", "teaching attenuation", "building the first layer of a digital twin"]:
+                st.write(f"- {useful_case}")
+            st.write("This model is not sufficient for:")
+            for limitation in ["waveform fidelity studies", "high-speed system design", "eye-diagram prediction", "BER estimation", "nonlinear-regime analysis", "experimental receiver prediction"]:
+                st.write(f"- {limitation}")
+        with fiber_research_tab:
+            st.subheader("Experimental connection")
+            st.write("The attenuation model could be validated by launching known power from a calibrated optical source into a known fiber length, measuring input and output power with an optical power meter, and comparing the measured loss with the predicted dB loss.")
+            st.subheader("Research extensions")
+            for extension in ["wavelength-dependent attenuation", "connector and splice loss", "chromatic dispersion", "laser chirp", "receiver responsivity", "shot and thermal noise", "OSNR", "eye diagrams", "BER estimation", "nonlinear Schrödinger equation models", "validation against laboratory measurements"]:
+                st.write(f"- {extension}")
+
+    st.header("7. Continue Learning")
     render_next_step("Continue with wave and ray intuition", "For guided LP modes, launch coupling, and meridional/skew-ray propagation, open Mode Explorer.", "Mode Explorer")
     render_footer()
 
