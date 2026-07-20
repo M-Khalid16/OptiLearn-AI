@@ -7,9 +7,11 @@
 
 ## Overview
 
-OptiLearn AI is an interactive engineering-education platform for optical communication. It combines deterministic Python simulations, grounded tutoring from lecture notes, formative assessment, and visualization of optical-fiber modes and ray propagation in one Streamlit workspace.
+OptiLearn AI is an interactive engineering-education platform for optical communication. It combines deterministic Python simulations, grounded tutoring from lecture notes, formative assessment, and interactive visualization of optical-fiber modes and ray propagation in one Streamlit workspace.
 
-The deterministic simulations, Quiz Lab, Mode Explorer, and PDF extraction can be used without an API key.
+The platform helps learners move from reading equations to changing parameters, observing physical consequences, inspecting assumptions, and testing their understanding.
+
+Most of the application works without OpenAI API access. Live grounded tutoring and live AI explanations require configured API access.
 
 Repository URL: https://github.com/M-Khalid16/OptiLearn-AI
 
@@ -19,100 +21,10 @@ Repository URL: https://github.com/M-Khalid16/OptiLearn-AI
 https://optilearn-ai-h3dgt9c9onvohsxi2u2aa4.streamlit.app/
 
 Most deterministic features work without OpenAI API access. Live grounded tutoring and live AI explanations require configured API access.
-
-## Why OptiLearn AI
-
-Students have access to more information than ever, but information alone does not create deep engineering understanding. Optical communication is challenging because attenuation, dispersion, guided modes, beam spreading, coupling, and propagation are physically invisible and mathematically abstract.
-
-OptiLearn AI supports active learning by helping learners:
-
-- question source material;
-- manipulate engineering parameters;
-- visualize cause and effect;
-- compare physical models;
-- inspect assumptions and limitations;
-- practise with formative questions;
-- connect mathematical results with physical meaning;
-- revisit difficult concepts through structured exploration.
-
-The platform supports learning opportunities. It does not claim experimentally measured educational outcomes and does not replace laboratory teaching, expert supervision, or formal assessment.
 
 
 **Version 1.0.0**
 
-
-
-
-
-OptiLearn AI is an interactive engineering-education platform for optical communication. It combines deterministic Python simulations, grounded tutoring from lecture notes, formative assessment, and interactive visualization of optical-fiber modes and ray propagation in one Streamlit workspace.
-
-The platform helps learners move from reading equations to changing parameters, observing physical consequences, inspecting assumptions, and testing their understanding.
-
-Most of the application works without OpenAI API access. Live grounded tutoring and live AI explanations require configured API access.
-
-Repository URL: https://github.com/M-Khalid16/OptiLearn-AI
-
-## Live Application
-
-**Launch OptiLearn AI:**
-https://optilearn-ai-h3dgt9c9onvohsxi2u2aa4.streamlit.app/
-
-Most deterministic features work without OpenAI API access. Live grounded tutoring and live AI explanations require configured API access.
-
-## Why OptiLearn AI
-
-Students have access to more information than ever, but information alone does not create deep engineering understanding. Optical communication is particularly challenging because attenuation, dispersion, guided modes, beam spreading, coupling, and propagation are physically invisible and mathematically abstract.
-
-OptiLearn AI is designed to support active learning by helping learners:
-
-- question source material;
-- manipulate engineering parameters;
-- visualize cause and effect;
-- compare physical models;
-- inspect assumptions and limitations;
-- practise with formative questions;
-- connect mathematical results with physical meaning;
-- revisit difficult concepts through structured exploration.
-
-The platform is designed to support learning opportunities. It does not claim experimentally measured educational outcomes and does not replace laboratory teaching, expert supervision, or formal assessment.
-
-## What the Application Does
-
-OptiLearn AI guides learners through a practical engineering-learning workflow:
-
-1. Prepare text-based lecture notes.
-2. Preserve page-level provenance.
-3. Ask evidence-grounded questions.
-4. Run deterministic optical-link simulations.
-5. Inspect plots, metrics, equations, and assumptions.
-6. Request explanations of calculated evidence.
-7. Practise with deterministic formative quizzes.
-8. Explore LP modes, Gaussian launch coupling, meridional rays, and skew rays.
-9. Revisit concepts based on observed results.
-
-## Learner Workflow
-
-```mermaid
-flowchart LR
-    A[Prepare lecture notes] --> B[Ask grounded questions]
-    B --> C[Run deterministic simulations]
-    C --> D[Inspect plots and assumptions]
-    D --> E[Review explanations]
-    E --> F[Practise in Quiz Lab]
-    F --> G[Explore modes and rays]
-    G --> H[Reflect and revisit concepts]
-```
-
-
-## Overview
-
-OptiLearn AI is an interactive engineering-education platform for optical communication. It combines deterministic Python simulations, grounded tutoring from lecture notes, formative assessment, and interactive visualization of optical-fiber modes and ray propagation in one Streamlit workspace.
-
-The platform helps learners move from reading equations to changing parameters, observing physical consequences, inspecting assumptions, and testing their understanding.
-
-Most of the application works without OpenAI API access. Live grounded tutoring and live AI explanations require configured API access.
-
-Repository URL: https://github.com/M-Khalid16/OptiLearn-AI
 
 ## Why OptiLearn AI
 
@@ -187,64 +99,6 @@ The Streamlit sidebar exposes these pages in the final application order:
 5. **Quiz Lab** — practise deterministic formative questions without OpenAI.
 6. **Mode Explorer** — explore LP modes, Gaussian launch coupling, meridional rays, and skew rays without OpenAI.
 
-## Core Features
-
-- Text-based lecture-note PDF extraction with page-level provenance.
-- Deterministic fiber attenuation and received-power simulation.
-- Deterministic chromatic-dispersion pulse-broadening simulation.
-- Deterministic free-space optical link-budget exploration.
-- Grounded AI Tutor that cites retrieved lecture-note evidence when API access is available.
-- AI simulation explanations from calculated evidence when API access is available.
-- Local Quiz Lab with deterministic grading and feedback.
-- Mode Explorer for scalar LP modes, launch coupling, meridional rays, and skew rays.
-- Demo-mode labels for transparent local demonstration behavior.
-- No account system, database, learner tracking, or required API key for non-AI features.
-
-
-## What the Application Does
-
-
-1. Prepare text-based lecture notes.
-2. Preserve page-level provenance.
-3. Ask evidence-grounded questions.
-4. Run deterministic optical-link simulations.
-5. Inspect plots, metrics, equations, and assumptions.
-6. Request explanations of calculated evidence.
-7. Practise with deterministic formative quizzes.
-8. Explore LP modes, Gaussian launch coupling, meridional rays, and skew rays.
-9. Revisit concepts based on observed results.
-
-## Learner Workflow
-
-```mermaid
-flowchart LR
-    A[Prepare lecture notes] --> B[Ask grounded questions]
-    B --> C[Run deterministic simulations]
-    C --> D[Inspect plots and assumptions]
-    D --> E[Review explanations]
-    E --> F[Practise in Quiz Lab]
-    F --> G[Explore modes and rays]
-    G --> H[Reflect and revisit concepts]
-```
-
-## Technical Workflow
-
-```mermaid
-flowchart TD
-    U[User action in Streamlit UI] --> S[app.py page renderer]
-    S --> P[PDF parser / deterministic model / quiz engine]
-    P --> V[Plotly visualizations and metrics]
-    P --> E[Evidence and assumptions]
-    E --> O{OpenAI configured?}
-    O -- No --> G[Graceful non-AI guidance]
-    O -- Yes --> A[Grounded AI answer or explanation]
-    V --> R[Learning response in browser]
-    A --> R
-    G --> R
-```
-
-The application separates deterministic scientific calculations from optional OpenAI features. Python modules calculate link budgets, dispersion, modes, coupling, rays, quiz grading, and PDF extraction. OpenAI is used only for live grounded tutoring and live explanations when API access is configured.
-
 OptiLearn AI uses educational deterministic approximations intended for learning and inspection:
 
 - **Fiber attenuation:** received optical power versus distance using attenuation in dB/km.
@@ -257,26 +111,6 @@ OptiLearn AI uses educational deterministic approximations intended for learning
 
 These models are designed for conceptual education, not certified system design.
 
-
-
-
-- **Fiber attenuation:** received optical power versus distance using attenuation in dB/km.
-- **Chromatic dispersion:** pulse broadening from dispersion coefficient, spectral width, and distance.
-- **Free-space optical link budget:** transmitted power, geometric spreading, aperture collection, atmospheric attenuation, pointing loss, and received power.
-- **LP mode exploration:** scalar weak-guidance approximations for optical-fiber mode shapes.
-- **Gaussian launch coupling:** overlap-style educational estimate for coupling into supported modes.
-- **Ray tracing:** idealized meridional and skew ray paths for geometric intuition.
-- **Quiz Lab:** locally graded formative questions generated from deterministic question banks and simulation outputs.
-
-These models are designed for conceptual education, not certified system design.
-
-
-1. **Home** — landing page and workflow entry point.
-2. **Lecture Notes** — upload text-based PDFs, inspect extracted pages, and preserve source provenance.
-3. **Digital Twin** — run deterministic fiber attenuation, dispersion, and free-space optical link explorations.
-4. **AI Tutor** — ask grounded questions over uploaded lecture-note passages when API access is configured.
-5. **Quiz Lab** — practise deterministic formative questions without OpenAI.
-6. **Mode Explorer** — explore LP modes, Gaussian launch coupling, meridional rays, and skew rays without OpenAI.
 
 ## Core Features
 
