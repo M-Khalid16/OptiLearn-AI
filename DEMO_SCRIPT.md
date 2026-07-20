@@ -8,7 +8,11 @@
 
 - **What to say:** “Students today can access more information than any previous generation, but information alone does not create engineering understanding. OptiLearn AI helps learners move from reading an equation to questioning it, changing its parameters, visualizing its consequences, and testing what they understand.”
 
+
+- **What to say:** “Students today can access more information than any previous generation, but information alone does not create engineering understanding. OptiLearn AI helps learners move from reading an equation to questioning it, changing its parameters, visualizing its consequences, and testing what they understand.”
+
 - **What to say:** “OptiLearn AI is an educational digital twin for optical communication. Deterministic Python calculates the physics; AI only explains supplied results or retrieved notes.”
+
 
 - **Expected result:** App opens on the Home page.
 - **Fallback if live AI is unavailable:** Enable `OPTILEARN_DEMO_MODE=true` to show labelled local templates.
@@ -58,6 +62,7 @@
 ## 9. Closing
 - **Action:** Return to Home or Scientific Transparency.
 - **What to say:** “OptiLearn AI is designed to help future engineers build not only knowledge, but also visual intuition, critical judgement, confidence, and lifelong-learning habits—the foundations they will need to contribute to the next generation of communication, photonic, and quantum technologies.”
+
 
 
 - **What to say:** “OptiLearn AI is designed to help future engineers build not only knowledge, but also visual intuition, critical judgement, confidence, and lifelong-learning habits—the foundations they will need to contribute to the next generation of communication, photonic, and quantum technologies.”

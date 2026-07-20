@@ -63,6 +63,7 @@ html, body, [class*="css"] { font-family: "Aptos", "Segoe UI", Arial, sans-serif
 @media (max-width: 760px) { .optilearn-card { min-height: auto; } .optilearn-hero { padding: 1rem; } }
 
 
+
 </style>
 """,
         unsafe_allow_html=True,
@@ -106,8 +107,11 @@ def render_feature_card(icon: str, title: str, body: str, badge: str | None = No
 
 def render_learning_step(number: int, title: str, body: str) -> None:
 
+
+
     """Render one learning journey step. The number is accepted for API stability but not displayed."""
     st.markdown(f'<div class="optilearn-card"><h3>{_e(title)}</h3><p>{_e(body)}</p></div>', unsafe_allow_html=True)
+
 
 
 
@@ -116,6 +120,7 @@ def render_learning_step(number: int, title: str, body: str) -> None:
 
     """Render one learning journey step."""
     st.markdown(f'<div class="optilearn-card"><span class="optilearn-step-number">{number:02d}</span><h3>{_e(title)}</h3><p>{_e(body)}</p></div>', unsafe_allow_html=True)
+
 
 
 
@@ -133,6 +138,7 @@ def render_scientific_trust_panel() -> None:
 <strong>Assumptions Made Visible:</strong> Every model states what is included and excluded.<br>
 <strong>No Invented Performance Claims:</strong> Unsupported BER, SNR, receiver, turbulence, or full-vector results are not fabricated.<br>
 <strong>Learning with Boundaries:</strong> Educational approximations are clearly distinguished from experimental-grade modelling.</div>
+
 
 
 Deterministic calculations stay in Python, equations and assumptions are shown, unsupported quantities are not invented, and AI explanations are separated from simulation calculations. Uploaded lecture notes remain session based, and current models are educational approximations.</div>
