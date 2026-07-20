@@ -1,0 +1,101 @@
+"""Reusable Streamlit UI components for OptiLearn AI."""
+
+import html
+
+import streamlit as st
+
+_TONES = {
+    "neutral": "badge-neutral",
+    "success": "badge-success",
+    "warning": "badge-warning",
+    "information": "badge-info",
+}
+
+
+def inject_global_styles() -> None:
+    """Inject the small scoped visual system used by the app."""
+    st.markdown(
+        """
+<style>
+.optilearn-hero, .optilearn-card, .optilearn-notice, .optilearn-next, .optilearn-footer {
+  border: 1px solid rgba(0, 188, 212, 0.24); border-radius: 1rem; padding: 1rem 1.1rem;
+  background: linear-gradient(135deg, rgba(6, 32, 64, 0.06), rgba(124, 58, 237, 0.05));
+}
+.optilearn-hero { padding: 1.35rem; border-left: 0.35rem solid #00bcd4; }
+.optilearn-eyebrow { color: #0891b2; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: .8rem; }
+.optilearn-card { min-height: 10.5rem; margin-bottom: .75rem; }
+.optilearn-card h3 { margin: .25rem 0 .35rem 0; }
+.optilearn-badge { display:inline-block; border-radius:999px; padding:.18rem .55rem; font-size:.78rem; font-weight:700; margin:.1rem .2rem .35rem 0; border:1px solid currentColor; }
+.badge-neutral { color:#475569; background:rgba(100,116,139,.10); }
+.badge-success { color:#047857; background:rgba(16,185,129,.12); }
+.badge-warning { color:#b45309; background:rgba(245,158,11,.14); }
+.badge-info { color:#0369a1; background:rgba(14,165,233,.12); }
+.optilearn-step-number { font-weight:800; color:#7c3aed; }
+.optilearn-next { border-left: .35rem solid #7c3aed; }
+.optilearn-footer { font-size:.9rem; color:inherit; opacity:.88; margin-top:2rem; }
+@media (max-width: 760px) { .optilearn-card { min-height: auto; } .optilearn-hero { padding: 1rem; } }
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+
+
+def _e(text: str) -> str:
+    return html.escape(str(text))
+
+
+def render_status_badge(text: str, tone: str) -> None:
+    """Render a labelled badge with a validated tone."""
+    if tone not in _TONES:
+        raise ValueError(f"Unsupported badge tone: {tone}")
+    st.markdown(f'<span class="optilearn-badge {_TONES[tone]}">{_e(text)}</span>', unsafe_allow_html=True)
+
+
+def render_page_header(title: str, subtitle: str, eyebrow: str | None = None, badge: str | None = None) -> None:
+    """Render a consistent page header."""
+    if eyebrow:
+        st.markdown(f'<div class="optilearn-eyebrow">{_e(eyebrow)}</div>', unsafe_allow_html=True)
+    if badge:
+        render_status_badge(badge, "information")
+    st.title(title)
+    st.write(subtitle)
+
+
+def render_scope_notice(supported: str, excluded: str) -> None:
+    """Render a concise model-scope notice."""
+    st.markdown(
+        f'<div class="optilearn-notice"><strong>Supported:</strong> {_e(supported)}<br><strong>Not included:</strong> {_e(excluded)}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def render_feature_card(icon: str, title: str, body: str, badge: str | None = None) -> None:
+    """Render one feature card."""
+    badge_html = f'<span class="optilearn-badge badge-neutral">{_e(badge)}</span>' if badge else ""
+    st.markdown(f'<div class="optilearn-card"><div>{_e(icon)}</div>{badge_html}<h3>{_e(title)}</h3><p>{_e(body)}</p></div>', unsafe_allow_html=True)
+
+
+def render_learning_step(number: int, title: str, body: str) -> None:
+    """Render one learning journey step."""
+    st.markdown(f'<div class="optilearn-card"><span class="optilearn-step-number">{number:02d}</span><h3>{_e(title)}</h3><p>{_e(body)}</p></div>', unsafe_allow_html=True)
+
+
+def render_scientific_trust_panel() -> None:
+    """Render the shared scientific trust panel."""
+    st.markdown(
+        """
+<div class="optilearn-notice"><strong>Built for Scientific Transparency</strong><br>
+Deterministic calculations stay in Python, equations and assumptions are shown, unsupported quantities are not invented, and AI explanations are separated from simulation calculations. Uploaded lecture notes remain session based, and current models are educational approximations.</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+
+def render_next_step(title: str, body: str, destination: str) -> None:
+    """Render a cross-page learning suggestion."""
+    st.markdown(f'<div class="optilearn-next"><strong>{_e(title)}</strong><p>{_e(body)}</p><span class="optilearn-badge badge-info">Next: {_e(destination)}</span></div>', unsafe_allow_html=True)
+
+
+def render_footer() -> None:
+    """Render the shared footer once per page."""
+    st.markdown('<div class="optilearn-footer">OptiLearn AI — deterministic educational optics with transparent AI assistance. No persistent learner profile.</div>', unsafe_allow_html=True)

@@ -7,6 +7,23 @@ from src.fso_simulator import FSOSimulationResult
 from src.optical_simulator import FiberSimulationResult
 
 
+def _apply_figure_layout(figure: go.Figure, title: str, x_title: str | None = None, y_title: str | None = None) -> go.Figure:
+    """Apply OptiLearn chart presentation defaults without changing data."""
+    figure.update_layout(
+        title={"text": title, "x": 0.02, "xanchor": "left"},
+        xaxis_title=x_title,
+        yaxis_title=y_title,
+        template="plotly_white",
+        font={"size": 13},
+        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "left", "x": 0},
+        margin={"l": 72, "r": 48, "t": 88, "b": 72},
+        hovermode="closest",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+    )
+    return figure
+
+
 def create_signal_comparison_figure(result: FiberSimulationResult) -> go.Figure:
     """Create a step-style comparison of transmitted and received signals."""
     figure = go.Figure()
@@ -30,15 +47,8 @@ def create_signal_comparison_figure(result: FiberSimulationResult) -> go.Figure:
             hovertemplate="Time: %{x:.4f} ns<br>Power: %{y:.6g} mW<extra></extra>",
         )
     )
-    figure.update_layout(
-        title="NRZ/OOK Optical Power Before and After Fiber Attenuation",
-        xaxis_title="Time (ns)",
-        yaxis_title="Optical Power (mW)",
-        template="plotly_white",
-        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02},
-        margin={"l": 70, "r": 30, "t": 90, "b": 70},
-        hovermode="x unified",
-    )
+    _apply_figure_layout(figure, "NRZ/OOK Optical Power Before and After Fiber Attenuation", "Time (ns)", "Optical Power (mW)")
+    figure.update_layout(hovermode="x unified")
     figure.add_annotation(
         text="Attenuation-only model: pulse shape is preserved",
         xref="paper",
@@ -89,15 +99,8 @@ def create_dispersion_comparison_figure(result: FiberSimulationResult) -> go.Fig
             hovertemplate="Time: %{x:.4f} ns<br>Power: %{y:.6g} mW<extra></extra>",
         )
     )
-    figure.update_layout(
-        title="Attenuation and Chromatic Dispersion",
-        xaxis_title="Time (ns)",
-        yaxis_title="Optical Power (mW)",
-        template="plotly_white",
-        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02},
-        margin={"l": 70, "r": 30, "t": 90, "b": 70},
-        hovermode="x unified",
-    )
+    _apply_figure_layout(figure, "Attenuation and Chromatic Dispersion", "Time (ns)", "Optical Power (mW)")
+    figure.update_layout(hovermode="x unified")
     return figure
 
 
@@ -126,13 +129,8 @@ def create_fso_power_budget_figure(result: FSOSimulationResult) -> go.Figure:
             hovertemplate="Stage: %{x}<br>Optical power: %{y:.6g} mW<extra></extra>",
         )
     )
-    figure.update_layout(
-        title="Deterministic FSO Power Budget",
-        xaxis_title="Link-budget stage",
-        yaxis_title="Optical Power (mW)",
-        template="plotly_white",
-        margin={"l": 70, "r": 30, "t": 80, "b": 90},
-    )
+    _apply_figure_layout(figure, "Deterministic FSO Power Budget", "Link-budget stage", "Optical Power (mW)")
+    figure.update_layout(margin={"l": 72, "r": 48, "t": 88, "b": 110})
     return figure
 
 
